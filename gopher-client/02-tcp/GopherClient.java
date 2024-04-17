@@ -34,9 +34,6 @@ public class GopherClient {
         serviceHost = address.getHostAddress();
         GopherDirectory gr = (GopherDirectory) gopherSendAndRecv(host, "");
         assert gr != null;
-        for (var k : gr.filePaths.entrySet()) {
-            System.out.printf("entry: %s \n" , k.getKey());
-        }
         gopherRecursive(gr.filePaths);
         GopherStats.printServers();
         GopherStats.printText();
@@ -57,7 +54,9 @@ public class GopherClient {
                 //sends a gopher request to the link
 
                 try {gr = gopherSendAndRecv(k.getKey(), p);}
-                catch(java.net.ConnectException | java.net.UnknownHostException d) {continue;}
+                catch(java.net.ConnectException | java.net.UnknownHostException d) {
+                    System.out.printf("%s connection error\n", p);
+                    continue;}
 
                 System.out.printf("%s: %s --\t", k.getKey(), p);
                 GopherStats.printStats();
