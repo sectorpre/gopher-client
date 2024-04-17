@@ -33,7 +33,14 @@ public class GopherClient {
         InetAddress address = InetAddress.getByName(host);
         serviceHost = address.getHostAddress();
         GopherDirectory gr = (GopherDirectory) gopherSendAndRecv(host, "");
+        assert gr != null;
+        for (var k : gr.filePaths.entrySet()) {
+            System.out.printf("entry: %s \n" , k.getKey());
+        }
         gopherRecursive(gr.filePaths);
+        GopherStats.printServers();
+        GopherStats.printText();
+        GopherStats.printBinary();
     }
 
     /** Send our request to server */
@@ -42,25 +49,26 @@ public class GopherClient {
         throws IOException
     {SockLine.writeLine(sock, request);}
 
-    protected static void gopherRecursive(HashMap<String, HashSet<String>> pathMap) throws IOException, InterruptedException {
+    protected static void gopherRecursive(HashMap<String, HashSet<String>> pathMap) throws IOException {
         GopherResponse gr;
         for (var k: pathMap.entrySet()) {
             for (var p: k.getValue()) {
-                if (Objects.equals(k.getKey(), "") || GopherStats.pageAdd(k.getKey(), p) == 0) {continue;}
+                if (Objects.equals(k.getKey(), "")) {continue;}
+                //sends a gopher request to the link
+
+                try {gr = gopherSendAndRecv(k.getKey(), p);}
+                catch(java.net.ConnectException | java.net.UnknownHostException d) {continue;}
 
                 System.out.printf("%s: %s --\t", k.getKey(), p);
-
                 GopherStats.printStats();
-
-                //sends a gopher request to the link
-                try {gr = gopherSendAndRecv(k.getKey().trim(), p);}
-                catch(java.net.ConnectException | java.net.UnknownHostException d) {continue;}
 
                 // calls gopherRecursive if there are more directories within it
                 if (gr == null) {continue;}
 
-                if (gr.getClass().equals(GopherDirectory.class)) {gopherRecursive(((GopherDirectory) gr).filePaths);}
-                else {GopherStats.fileSort((GopherFile) gr);}
+                // adds gopherResponse to gopherstats and if it is a directory, calls gopherRecursive
+                if (GopherStats.fileSort(gr) == 1) {
+                    gopherRecursive(((GopherDirectory) gr).filePaths);
+                }
             }
         }
     }
@@ -68,25 +76,27 @@ public class GopherClient {
     protected static GopherResponse gopherSendAndRecv(String ipAddress, String request)
             throws IOException {
         Socket              sock;
-        GopherResponse gr ;
+        GopherResponse gr;
 
         InetAddress address = InetAddress.getByName(ipAddress);
         sock = new Socket(address.getHostAddress(), 70);
-        if (!address.getHostAddress().equals(serviceHost)) {
-            return null;
-        }
 
+        // if host is an external server or page is visited before, returns null
+        if (GopherStats.pageAdd(address.getHostAddress(), request) == 0 || !address.getHostAddress().equals(serviceHost)) {
+            return null;}
+
+        // checks to see if file or directory
         String[] tempsplit = request.split("/");
         if (tempsplit.length == 0) {
-            gr = new GopherDirectory(request);
+            gr = new GopherDirectory(ipAddress, request);
         }
         else {
             String[] selectorSplit = tempsplit[tempsplit.length - 1].split("\\.");
             if (selectorSplit.length > 1) {
-                gr = new GopherFile(request, selectorSplit[selectorSplit.length - 1].trim());
+                gr = new GopherFile(ipAddress, request, selectorSplit[selectorSplit.length - 1].trim());
             }
             else {
-                gr = new GopherDirectory(request);
+                gr = new GopherDirectory(ipAddress, request);
             }
 
         }
@@ -94,7 +104,7 @@ public class GopherClient {
         // send request
         if (!request.isEmpty()) {
             sendRequest(sock, request);
-            sendRequest(sock, "\t$\r\n");
+            sendRequest(sock, "\r\n");
         }
         else {
             sendRequest(sock, "\r\n");

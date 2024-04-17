@@ -5,8 +5,8 @@ public class GopherFile extends GopherResponse {
     String fileType;
     ByteBuffer fileData;
 
-    public GopherFile(String filepath, String ft) {
-        super(filepath);
+    public GopherFile(String host ,String filepath, String ft) {
+        super(host, filepath);
         fileType = ft;
 
     }

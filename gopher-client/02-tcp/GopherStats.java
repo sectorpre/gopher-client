@@ -1,16 +1,42 @@
+import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Objects;
 
 public class GopherStats {
     public static HashMap<String, HashSet<String>> visitedPages = new HashMap<>();
-    public static HashMap<String, Integer> binaryMap = new HashMap<>();
-    public static HashMap<String, Integer> textMap = new HashMap<>();
+    public static HashSet<GopherFile> binaryMap = new HashSet<>();
+    public static HashSet<GopherFile> textMap = new HashSet<>();
+    public static HashSet<GopherDirectory> dirMap = new HashSet<>();
     public static Integer pagesVisited = 0;
 
     // if hostIpAddress is set, only pages of the hostIPAddress are added
     public static String hostname = "";
 
+    public static void printServers() {
+        System.out.println("====================");
+        for (var k : visitedPages.entrySet()) {
+            System.out.printf("Server: %s \n" , k.getKey());
+        }
+        System.out.println("====================");
+
+    }
+
+    public static void printText() {
+        System.out.println("====================");
+        for (var k: textMap) {
+            System.out.printf("%s:%s \n", k.host, k.selector);
+        }
+        System.out.println("====================");
+    }
+
+    public static void printBinary() {
+        System.out.println("====================");
+        for (var k: binaryMap) {
+            System.out.printf("%s:%s \n", k.host, k.selector);
+        }
+        System.out.println("====================");
+    }
 
     public static int pageAdd(String host, String selector) {
         //ensures pages are not visited in a loop
@@ -23,7 +49,6 @@ public class GopherStats {
             newEntry.add(selector);
             GopherStats.visitedPages.put(host, newEntry);
         }
-        //SockLine.selectiveAdd(visitedPages, host, selector);
         GopherStats.pagesVisited += 1;
         return 1;
     }
@@ -35,14 +60,20 @@ public class GopherStats {
                 binaryMap.size());
     }
 
-    public static void fileSort(GopherFile gr) {
-        if (Objects.equals(gr.fileType.trim(), "txt")) {
-            GopherStats.textMap.put(gr.selector, gr.size);
+    public static int fileSort(GopherResponse gr) {
+        if (gr.getClass().equals(GopherDirectory.class)) {
+            GopherStats.dirMap.add((GopherDirectory) gr);
+            return 1;
         }
         else {
-            GopherStats.binaryMap.put(gr.selector, gr.size);
+            if (Objects.equals(((GopherFile) gr).fileType.trim(), "txt")) {
+                GopherStats.textMap.add((GopherFile) gr);
+            }
+            else {
+                GopherStats.binaryMap.add((GopherFile) gr);
+            }
+            return 0;
         }
-
     }
 
 

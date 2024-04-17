@@ -26,14 +26,13 @@ class SockLine {
         sock.getOutputStream().write(txt.getBytes("UTF-8"));
     }
 
-    public static <K, V> HashMap<K, HashSet<V>> selectiveAdd(HashMap<K, HashSet<V>> map, K variable1, V variable2) {
+    public static <K, V> void selectiveAdd(HashMap<K, HashSet<V>> map, K variable1, V variable2) {
         if (map.containsKey(variable1)) {map.get(variable1).add(variable2);}
         else {
             HashSet<V> newSet = new HashSet<>();
             newSet.add(variable2);
             map.put(variable1, newSet);
         }
-        return map;
     }
 
 
@@ -50,7 +49,13 @@ class SockLine {
         HashMap<String, HashSet<String>> paths = new HashMap<>();
 
         while (true) {
-            ch = sock.getInputStream().read();
+            ch = sock.getInputStream().read();;
+//            try {
+//                System.out.printf("%c", ch);
+//            }
+//            catch (java.util.IllegalFormatCodePointException e){
+//                System.out.print(":?");
+//            }
             responseSize += 1;
 
             // checks for special characters
