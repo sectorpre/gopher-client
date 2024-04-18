@@ -46,64 +46,71 @@ class SockLine {
         int responseSize = 0;
         String hostAcc = "";
         String selectorAcc = "";
+        String portAcc = "";
         DirectoryEntry de = new DirectoryEntry();
         HashSet<DirectoryEntry> paths = new HashSet<>();
 
-        while (true) {
-            ch = sock.getInputStream().read();;
-//            try {
-//                System.out.printf("%c", ch);
-//            }
-//            catch (java.util.IllegalFormatCodePointException e){
-//                System.out.print(":?");
-//            }
-            responseSize += 1;
-
-            // checks for special characters
-            if (ch < 0) {break;}
-            else if (ch == '\n') {
-                if (skipPrint == 0) {
-                    de.selector = selectorAcc;
-                    de.host = hostAcc;
-                    paths.add(de);
-                    de = new DirectoryEntry();
-                    selectorAcc = "";
-                    hostAcc = "";
-                }
-                Header.setHeader(Header.HeaderType.TYPE);
-                skipPrint = 0;
-                continue;
-            }
-            else if (ch == '\t') {
-                Header.nextHeader();
-                continue;
-            }
-
-            if (skipPrint == 1) continue;
-
-            // checks TYPE byte
-            if (Header.currentHeader == Header.HeaderType.TYPE) {
-                // of type "information" so skip
-                de.type = ch;
-                if (ch == 105) {skipPrint = 1;}
-                Header.nextHeader();
-            }
-            else if (Header.currentHeader == Header.HeaderType.SELECTOR) {
-                selectorAcc += (char) ch;
-            }
-            else if (Header.currentHeader == Header.HeaderType.HOST) {
-                hostAcc += (char) ch;
-            }
-        }
-
-        // end
-
         if (gr.getClass().equals(GopherFile.class)) {
+            while (true) {
+                ch = sock.getInputStream().read();;
+                responseSize += 1;
+
+                // checks for special characters
+                if (ch < 0) {break;}
+            }
             ((GopherFile) gr).size = responseSize;
         }
         else if (gr.getClass().equals(GopherDirectory.class)){
+            while (true) {
+                ch = sock.getInputStream().read();;
+                responseSize += 1;
+
+                // checks for special characters
+                if (ch < 0) {break;}
+                else if (ch == '\n') {
+                    System.out.printf("%s %s %s\n", hostAcc,selectorAcc,portAcc );
+                    if (skipPrint == 0 && !hostAcc.isEmpty()) {
+                        de.selector = selectorAcc;
+                        de.host = hostAcc;
+                        de.port = Integer.valueOf(portAcc);
+                        paths.add(de);
+                    }
+                    de = new DirectoryEntry();
+                    selectorAcc = "";
+                    hostAcc = "";
+                    portAcc = "";
+                    Header.setHeader(Header.HeaderType.TYPE);
+                    skipPrint = 0;
+                    continue;
+                }
+                else if (ch == '\t') {
+                    Header.nextHeader();
+                    continue;
+                }
+
+                if (skipPrint == 1) continue;
+
+                // checks TYPE byte
+                if (Header.currentHeader == Header.HeaderType.TYPE) {
+                    // of type "information" so skip
+                    de.type = ch;
+                    if (ch == 105) {skipPrint = 1;}
+                    Header.nextHeader();
+                }
+                else if (Header.currentHeader == Header.HeaderType.SELECTOR) {
+                    selectorAcc += (char) ch;
+                }
+                else if (Header.currentHeader == Header.HeaderType.HOST) {
+                    hostAcc += (char) ch;
+                }
+                else if (Header.currentHeader == Header.HeaderType.PORT) {
+                    if (ch == 13) {continue;}
+                    portAcc += (char) ch;
+                }
+            }
             ((GopherDirectory) gr).filePaths = paths;
         }
+
         return gr;
     }
 }

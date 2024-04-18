@@ -38,12 +38,19 @@ public class GopherStats {
         System.out.println("====================");
     }
 
-    public static int pageAdd(String host, String selector) {
+    public static int pageCheck(String host, String selector) {
         //ensures pages are not visited in a loop
         if (visitedPages.containsKey(host)) {
             if (visitedPages.get(host).contains(selector)) {
                 return 0;}
-            else {GopherStats.visitedPages.get(host).add(selector);}
+        }
+        return 1;
+    }
+
+    public static int pageAdd(String host, String selector) {
+        //ensures pages are not visited in a loop
+        if (visitedPages.containsKey(host)) {
+            GopherStats.visitedPages.get(host).add(selector);
         }
         else {
             HashSet<String> newEntry = new HashSet<>();
@@ -61,20 +68,14 @@ public class GopherStats {
                 binaryMap.size());
     }
 
-    public static int fileSort(GopherResponse gr) {
-        if (gr.getClass().equals(GopherDirectory.class)) {
-            GopherStats.dirMap.add((GopherDirectory) gr);
-            return 1;
+    public static int fileSort(GopherFile gr) {
+        if (gr.fileType == 57) {
+            GopherStats.binaryMap.add(gr);
         }
-        else {
-            if (Objects.equals(((GopherFile) gr).fileType.trim(), "txt")) {
-                GopherStats.textMap.add((GopherFile) gr);
-            }
-            else {
-                GopherStats.binaryMap.add((GopherFile) gr);
-            }
-            return 0;
+        else if (gr.fileType == 48) {
+            GopherStats.textMap.add(gr);
         }
+        return 0;
     }
 
 
