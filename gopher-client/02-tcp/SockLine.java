@@ -46,7 +46,8 @@ class SockLine {
         int responseSize = 0;
         String hostAcc = "";
         String selectorAcc = "";
-        HashMap<String, HashSet<String>> paths = new HashMap<>();
+        DirectoryEntry de = new DirectoryEntry();
+        HashSet<DirectoryEntry> paths = new HashSet<>();
 
         while (true) {
             ch = sock.getInputStream().read();;
@@ -62,7 +63,10 @@ class SockLine {
             if (ch < 0) {break;}
             else if (ch == '\n') {
                 if (skipPrint == 0) {
-                    selectiveAdd(paths, hostAcc,selectorAcc);
+                    de.selector = selectorAcc;
+                    de.host = hostAcc;
+                    paths.add(de);
+                    de = new DirectoryEntry();
                     selectorAcc = "";
                     hostAcc = "";
                 }
@@ -80,6 +84,7 @@ class SockLine {
             // checks TYPE byte
             if (Header.currentHeader == Header.HeaderType.TYPE) {
                 // of type "information" so skip
+                de.type = ch;
                 if (ch == 105) {skipPrint = 1;}
                 Header.nextHeader();
             }
@@ -101,5 +106,4 @@ class SockLine {
         }
         return gr;
     }
-
 }

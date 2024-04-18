@@ -46,30 +46,27 @@ public class GopherClient {
         throws IOException
     {SockLine.writeLine(sock, request);}
 
-    protected static void gopherRecursive(HashMap<String, HashSet<String>> pathMap) throws IOException {
+    protected static void gopherRecursive(HashSet<DirectoryEntry> des) throws IOException {
         GopherResponse gr;
-        for (var k: pathMap.entrySet()) {
-            for (var p: k.getValue()) {
-                if (Objects.equals(k.getKey(), "")) {continue;}
-                //sends a gopher request to the link
+        for (DirectoryEntry k : des) {
+            if (Objects.equals(k.host, "")) {continue;}
+            //sends a gopher request to the link
 
-                try {gr = gopherSendAndRecv(k.getKey(), p);}
-                catch(java.net.ConnectException | java.net.UnknownHostException d) {
-                    System.out.printf("%s connection error\n", p);
-                    continue;}
+            try {gr = gopherSendAndRecv(k.host, k.selector);}
+            catch(java.net.ConnectException | java.net.UnknownHostException d) {
+                System.out.printf("%s connection error\n", k.selector);
+                continue;}
 
-                System.out.printf("%s: %s --\t", k.getKey(), p);
-                GopherStats.printStats();
+            // calls gopherRecursive if there are more directories within it
+            if (gr == null) {continue;}
+            System.out.printf("%s: %s --\t", k.host, k.selector);
+            GopherStats.printStats();
 
-                // calls gopherRecursive if there are more directories within it
-                if (gr == null) {continue;}
-
-                // adds gopherResponse to gopherstats and if it is a directory, calls gopherRecursive
-                if (GopherStats.fileSort(gr) == 1) {
-                    gopherRecursive(((GopherDirectory) gr).filePaths);
-                }
+            // adds gopherResponse to gopherstats and if it is a directory, calls gopherRecursive
+            if (GopherStats.fileSort(gr) == 1) {
+                gopherRecursive(((GopherDirectory) gr).filePaths);
             }
-        }
+        };
     }
 
     protected static GopherResponse gopherSendAndRecv(String ipAddress, String request)
@@ -103,15 +100,11 @@ public class GopherClient {
         // send request
         if (!request.isEmpty()) {
             sendRequest(sock, request);
-            sendRequest(sock, "\r\n");
         }
-        else {
-            sendRequest(sock, "\r\n");
-        }
+        sendRequest(sock, "\r\n");
         SockLine.gopherRead(sock, gr);
         sock.close();
         return gr;
-
 
     }
 
