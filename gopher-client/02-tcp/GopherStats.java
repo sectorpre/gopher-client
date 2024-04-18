@@ -41,7 +41,8 @@ public class GopherStats {
     public static int pageAdd(String host, String selector) {
         //ensures pages are not visited in a loop
         if (visitedPages.containsKey(host)) {
-            if (visitedPages.get(host).contains(selector)) {return 0;}
+            if (visitedPages.get(host).contains(selector)) {
+                return 0;}
             else {GopherStats.visitedPages.get(host).add(selector);}
         }
         else {

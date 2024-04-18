@@ -32,9 +32,13 @@ public class GopherClient {
 
         InetAddress address = InetAddress.getByName(host);
         serviceHost = address.getHostAddress();
-        GopherDirectory gr = (GopherDirectory) gopherSendAndRecv(host, "");
-        assert gr != null;
-        gopherRecursive(gr.filePaths);
+        DirectoryEntry de = new DirectoryEntry();
+        de.host = serviceHost;
+        de.selector = "";
+        de.type = 49;
+        HashSet<DirectoryEntry> start = new HashSet<>();
+        start.add(de);
+        gopherRecursive(start);
         GopherStats.printServers();
         GopherStats.printText();
         GopherStats.printBinary();
@@ -47,59 +51,53 @@ public class GopherClient {
     {SockLine.writeLine(sock, request);}
 
     protected static void gopherRecursive(HashSet<DirectoryEntry> des) throws IOException {
-        GopherResponse gr;
         for (DirectoryEntry k : des) {
+            GopherResponse gr;
             if (Objects.equals(k.host, "")) {continue;}
             //sends a gopher request to the link
 
-            try {gr = gopherSendAndRecv(k.host, k.selector);}
+            try {gr = gopherSendAndRecv(k);}
             catch(java.net.ConnectException | java.net.UnknownHostException d) {
                 System.out.printf("%s connection error\n", k.selector);
                 continue;}
 
             // calls gopherRecursive if there are more directories within it
-            if (gr == null) {continue;}
+            if (gr == null) {
+                continue;}
             System.out.printf("%s: %s --\t", k.host, k.selector);
             GopherStats.printStats();
 
             // adds gopherResponse to gopherstats and if it is a directory, calls gopherRecursive
+            //TODO fix filesort
             if (GopherStats.fileSort(gr) == 1) {
                 gopherRecursive(((GopherDirectory) gr).filePaths);
             }
         };
     }
 
-    protected static GopherResponse gopherSendAndRecv(String ipAddress, String request)
+    protected static GopherResponse gopherSendAndRecv(DirectoryEntry de)
             throws IOException {
         Socket              sock;
         GopherResponse gr;
 
-        InetAddress address = InetAddress.getByName(ipAddress);
+        InetAddress address = InetAddress.getByName(de.host);
         sock = new Socket(address.getHostAddress(), 70);
 
         // if host is an external server or page is visited before, returns null
-        if (GopherStats.pageAdd(address.getHostAddress(), request) == 0 || !address.getHostAddress().equals(serviceHost)) {
+        if (GopherStats.pageAdd(address.getHostAddress(), de.selector) == 0 || !address.getHostAddress().equals(serviceHost)) {
             return null;}
 
         // checks to see if file or directory
-        String[] tempsplit = request.split("/");
-        if (tempsplit.length == 0) {
-            gr = new GopherDirectory(ipAddress, request);
+        if (de.type == 49) {
+            gr = new GopherDirectory(de.host, de.selector);
         }
         else {
-            String[] selectorSplit = tempsplit[tempsplit.length - 1].split("\\.");
-            if (selectorSplit.length > 1) {
-                gr = new GopherFile(ipAddress, request, selectorSplit[selectorSplit.length - 1].trim());
-            }
-            else {
-                gr = new GopherDirectory(ipAddress, request);
-            }
-
+            //TODO fix file type
+            gr = new GopherFile(de.host, de.selector, "");
         }
 
-        // send request
-        if (!request.isEmpty()) {
-            sendRequest(sock, request);
+        if (!de.selector.isEmpty()) {
+            sendRequest(sock, de.selector);
         }
         sendRequest(sock, "\r\n");
         SockLine.gopherRead(sock, gr);

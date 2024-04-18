@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class GopherDirectory extends GopherResponse {
-    HashSet<DirectoryEntry> filePaths;
+    HashSet<DirectoryEntry> filePaths = new HashSet<>();
 
     public GopherDirectory(String host, String filepath) {
         super(host, filepath);
