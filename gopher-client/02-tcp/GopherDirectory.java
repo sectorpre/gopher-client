@@ -17,16 +17,18 @@ public class GopherDirectory extends GopherResponse {
         String portAcc = "";
         DirectoryEntry de = new DirectoryEntry();
         HashSet<DirectoryEntry> paths = new HashSet<>();
+        int nxthead = 0;
+        Header header = new Header();
 
         while (true) {
-            ch = sock.getInputStream().read();;
+            ch = sock.getInputStream().read();
 
             // checks for special characters
             if (ch < 0) {break;}
             else if (ch == '\n') {
                 //System.out.printf("host:%s selector:%s port:%s\n", de.host,de.selector,portAcc );
                 if (skipPrint == 0 ) {
-                    if (Header.currentHeader != Header.HeaderType.PORT) {
+                    if (header.currentHeader != Header.HeaderType.PORT) {
                         throw new MalformedDirectory();
                     }
                     de.port = Integer.valueOf(portAcc);
@@ -34,27 +36,29 @@ public class GopherDirectory extends GopherResponse {
                 }
                 de = new DirectoryEntry();
                 portAcc = "";
-                Header.setHeader(Header.HeaderType.TYPE);
+                header.setHeader(Header.HeaderType.TYPE);
                 skipPrint = 0;
                 continue;
             }
             else if (ch == '\t') {
-                Header.nextHeader();
+                header.nextHeader();
+                nxthead += 1;
                 continue;
             }
 
             if (skipPrint == 1) continue;
 
             // checks TYPE byte
-            if (Header.currentHeader == Header.HeaderType.TYPE) {
+            if (header.currentHeader == Header.HeaderType.TYPE) {
                 // of type "information" so skip
-                if (ch == 105 || ch == 46) {skipPrint = 1;}
+                if (ch == 105) {skipPrint = 1;}
+                else if (ch == 46) {break;}
                 de.type = ch;
-                Header.nextHeader();
+                header.nextHeader();
             }
-            else if (Header.currentHeader == Header.HeaderType.SELECTOR) {de.selector += (char) ch;}
-            else if (Header.currentHeader == Header.HeaderType.HOST) {de.host += (char) ch;}
-            else if (Header.currentHeader == Header.HeaderType.PORT) {
+            else if (header.currentHeader == Header.HeaderType.SELECTOR) {de.selector += (char) ch;}
+            else if (header.currentHeader == Header.HeaderType.HOST) {de.host += (char) ch;}
+            else if (header.currentHeader == Header.HeaderType.PORT) {
                 if (ch == 13) {continue;}
                 portAcc += (char) ch;
             }

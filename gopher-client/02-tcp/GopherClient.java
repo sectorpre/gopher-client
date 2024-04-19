@@ -110,9 +110,7 @@ public class GopherClient {
         sock.setSoTimeout(1000);
 
         // if host is an external server or page is visited before, returns null
-        if (GopherStats.pageCheck(address, de.selector) == 0 || !address.equals(serviceHost)) {
-            return null;
-        }
+        if (GopherStats.pageCheck(address, de.selector) == 0 || !address.equals(serviceHost)) {return null;}
 
         // checks to see if file or directory
         if (de.type == 49) {gr = new GopherDirectory(de.host, de.selector);}

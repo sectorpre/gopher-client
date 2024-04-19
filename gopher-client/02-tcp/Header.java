@@ -1,7 +1,7 @@
 public class Header {
 
-    public static HeaderType currentHeader = HeaderType.TYPE;
-    public enum HeaderType {
+    public HeaderType currentHeader = HeaderType.TYPE;
+    public static enum HeaderType {
         TYPE,
         NAME,
         SELECTOR,
@@ -10,7 +10,7 @@ public class Header {
 
     }
 
-    public static HeaderType nextHeader() {
+    public HeaderType nextHeader() {
         switch (currentHeader) {
             case TYPE:
                 currentHeader = HeaderType.NAME;
@@ -31,8 +31,8 @@ public class Header {
         return currentHeader;
     }
 
-    public static String headerToString() {
-        return switch (currentHeader) {
+    public String headerToString() {
+        return switch (this.currentHeader) {
             case TYPE -> "type";
             case NAME -> "name";
             case SELECTOR -> "selector";
@@ -41,7 +41,7 @@ public class Header {
         };
     }
 
-    public static void setHeader(HeaderType h) {
+    public void setHeader(HeaderType h) {
         currentHeader = h;
     }
 
