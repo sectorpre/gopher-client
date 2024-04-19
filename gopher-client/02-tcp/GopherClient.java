@@ -96,10 +96,12 @@ public class GopherClient {
         if (de.type == 49) {gr = new GopherDirectory(de.host, de.selector);}
         else {gr = new GopherFile(de.host, de.selector, de.type);}
 
-        // sending request
+        // sending and reading
         if (!de.selector.isEmpty()) {sendRequest(sock, de.selector);}
         sendRequest(sock, "\r\n");
-        SockLine.gopherRead(sock, gr);
+        gr.read(sock);
+
+        // closing actions
         sock.close();
         GopherStats.pageAdd(address.getHostAddress(), de.selector);
         return gr;
