@@ -64,9 +64,26 @@ public class GopherClient {
                 gr = gopherSendAndRecv(k);
                 if (gr == null) {continue;}
             }
-            catch(java.net.ConnectException | java.net.UnknownHostException d) {
-                System.out.printf("%s:%d -> %s connection error\n", k.host, k.port, k.selector);
-                continue;}
+            catch (java.net.UnknownHostException d) {
+                System.out.printf("%s:%d -> %s -- unknown server\n", k.host, k.port, k.selector);
+                continue;
+            }
+            catch (java.net.SocketTimeoutException d) {
+                System.out.printf("%s:%d -> %s -- server unresponsive\n", k.host, k.port, k.selector);
+                continue;
+            }
+            catch(java.net.ConnectException d ) {
+                System.out.printf("%s:%d -> %s -- connection error \n", k.host, k.port, k.selector);
+                continue;
+            }
+            catch (GopherResponse.DataExceedException d) {
+                System.out.printf("%s:%d -> %s -- data exceeded limit\n", k.host, k.port, k.selector);
+                continue;
+            }
+            catch (GopherResponse.MalformedDirectory d) {
+                System.out.printf("%s:%d -> %s -- malformed directory exception\n", k.host, k.port, k.selector);
+                continue;
+            }
 
             System.out.printf("%s:%d -> %s --\t", k.host, k.port, k.selector);
             GopherStats.printStats();
@@ -84,16 +101,18 @@ public class GopherClient {
      *
      * */
     protected static GopherResponse gopherSendAndRecv(DirectoryEntry de)
-            throws IOException {
+            throws IOException, GopherResponse.DataExceedException, GopherResponse.MalformedDirectory {
         Socket              sock;
         GopherResponse gr;
 
         String address = InetAddress.getByName(de.host).getHostAddress();
         sock = new Socket(address, 70);
+        sock.setSoTimeout(1000);
 
         // if host is an external server or page is visited before, returns null
         if (GopherStats.pageCheck(address, de.selector) == 0 || !address.equals(serviceHost)) {
-            return null;}
+            return null;
+        }
 
         // checks to see if file or directory
         if (de.type == 49) {gr = new GopherDirectory(de.host, de.selector);}

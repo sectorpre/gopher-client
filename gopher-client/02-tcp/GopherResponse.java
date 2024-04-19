@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.util.HashSet;
 
@@ -12,7 +13,7 @@ public abstract class GopherResponse {
     }
 
 
-    public void read(Socket sock) throws IOException {}
+    public void read(Socket sock) throws IOException, DataExceedException, MalformedDirectory {}
 
     public void addToStats(String ip) {
         if (GopherStats.visitedPages.containsKey(ip)) {
@@ -25,6 +26,16 @@ public abstract class GopherResponse {
         }
         GopherStats.pagesVisited += 1;
 
+    }
+
+    public static class DataExceedException extends Exception {
+        public DataExceedException() {
+        }
+    }
+
+    public static class MalformedDirectory extends Exception {
+        public MalformedDirectory() {
+        }
     }
 }
 

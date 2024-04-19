@@ -49,22 +49,10 @@ public class GopherStats {
 
 
     public static void printStats() {
-        System.out.printf("pages visited: %d, text files: %d, binary files %d\n",
+        System.out.printf("pages visited: %d, directories: %d ,text files: %d, binary files %d\n",
                 pagesVisited,
+                dirMap.size(),
                 textMap.size(),
                 binaryMap.size());
     }
-
-    public static int fileSort(GopherFile gr) {
-        if (gr.fileType == 57) {
-            GopherStats.binaryMap.add(gr);
-        }
-        else if (gr.fileType == 48) {
-            GopherStats.textMap.add(gr);
-        }
-        return 0;
-    }
-
-
-
 }

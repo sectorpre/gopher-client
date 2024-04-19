@@ -14,10 +14,13 @@ public class GopherFile extends GopherResponse {
     }
 
     @Override
-    public void read(Socket sock) throws IOException {
+    public void read(Socket sock) throws IOException, DataExceedException {
         int     ch;
         int responseSize = 0;
         do {
+            if (responseSize > 100000) {
+                throw new GopherResponse.DataExceedException();
+            }
             ch = sock.getInputStream().read();
             ;
             responseSize += 1;

@@ -11,7 +11,7 @@ public class GopherDirectory extends GopherResponse {
     }
 
     @Override
-    public void read(Socket sock) throws IOException {
+    public void read(Socket sock) throws IOException, MalformedDirectory {
         int     ch;
         int skipPrint = 0;
         String portAcc = "";
@@ -26,6 +26,9 @@ public class GopherDirectory extends GopherResponse {
             else if (ch == '\n') {
                 //System.out.printf("host:%s selector:%s port:%s\n", de.host,de.selector,portAcc );
                 if (skipPrint == 0 ) {
+                    if (Header.currentHeader != Header.HeaderType.PORT) {
+                        throw new MalformedDirectory();
+                    }
                     de.port = Integer.valueOf(portAcc);
                     paths.add(de);
                 }
@@ -57,5 +60,12 @@ public class GopherDirectory extends GopherResponse {
             }
         }
         this.filePaths = paths;
+    }
+
+    @Override
+    public void addToStats(String ip) {
+        super.addToStats(ip);
+        GopherStats.dirMap.add(this);
+
     }
 }
