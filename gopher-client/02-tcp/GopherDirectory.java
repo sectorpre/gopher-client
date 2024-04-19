@@ -9,7 +9,8 @@ public class GopherDirectory extends GopherResponse {
     public GopherDirectory(String host, String filepath) {
         super(host, filepath);
     }
-    
+
+    @Override
     public void read(Socket sock) throws IOException {
         int     ch;
         int skipPrint = 0;

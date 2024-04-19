@@ -13,6 +13,7 @@ public class GopherFile extends GopherResponse {
 
     }
 
+    @Override
     public void read(Socket sock) throws IOException {
         int     ch;
         int responseSize = 0;
@@ -22,6 +23,17 @@ public class GopherFile extends GopherResponse {
             responseSize += 1;
         } while (ch >= 0);
         this.size = responseSize;
+    }
+
+    @Override
+    public void addToStats(String ip) {
+        super.addToStats(ip);
+        if (this.fileType == 57) {
+            GopherStats.binaryMap.add(this);
+        }
+        else if (this.fileType == 48) {
+            GopherStats.textMap.add(this);
+        }
     }
 }
 

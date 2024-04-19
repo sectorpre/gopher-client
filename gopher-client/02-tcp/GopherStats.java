@@ -47,19 +47,6 @@ public class GopherStats {
         return 1;
     }
 
-    public static int pageAdd(String host, String selector) {
-        //ensures pages are not visited in a loop
-        if (visitedPages.containsKey(host)) {
-            GopherStats.visitedPages.get(host).add(selector);
-        }
-        else {
-            HashSet<String> newEntry = new HashSet<>();
-            newEntry.add(selector);
-            GopherStats.visitedPages.put(host, newEntry);
-        }
-        GopherStats.pagesVisited += 1;
-        return 1;
-    }
 
     public static void printStats() {
         System.out.printf("pages visited: %d, text files: %d, binary files %d\n",

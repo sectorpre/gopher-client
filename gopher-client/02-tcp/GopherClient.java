@@ -74,13 +74,13 @@ public class GopherClient {
             // calls gopherRecursive if directoryEntry was a directory request
             // if not adds it into file sort
             if ( k.type== 49) {gopherRecursive(((GopherDirectory) gr).filePaths);}
-            else {GopherStats.fileSort((GopherFile) gr);}
         };
     }
 
     /**
      * Sends a request to a destination as specified from a directory
      * Entry and reads a response.
+     * Basically converts a DirectoryEntry into a GopherResponse
      *
      * */
     protected static GopherResponse gopherSendAndRecv(DirectoryEntry de)
@@ -88,11 +88,11 @@ public class GopherClient {
         Socket              sock;
         GopherResponse gr;
 
-        InetAddress address = InetAddress.getByName(de.host);
-        sock = new Socket(address.getHostAddress(), 70);
+        String address = InetAddress.getByName(de.host).getHostAddress();
+        sock = new Socket(address, 70);
 
         // if host is an external server or page is visited before, returns null
-        if (GopherStats.pageCheck(address.getHostAddress(), de.selector) == 0 || !address.getHostAddress().equals(serviceHost)) {
+        if (GopherStats.pageCheck(address, de.selector) == 0 || !address.equals(serviceHost)) {
             return null;}
 
         // checks to see if file or directory
@@ -106,9 +106,8 @@ public class GopherClient {
 
         // closing actions
         sock.close();
-        GopherStats.pageAdd(address.getHostAddress(), de.selector);
+        gr.addToStats(address);
         return gr;
-
     }
 
     /** Handle command line arguments. */
