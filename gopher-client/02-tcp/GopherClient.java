@@ -49,37 +49,40 @@ public class GopherClient {
 
     protected static void sendRequest(Socket sock, String request)
         throws IOException
-    {SockLine.writeLine(sock, request);}
+    { sock.getOutputStream().write(request.getBytes("UTF-8"));}
 
+    /** Function which recursively sends Gopher request to host:port/selector listed
+     * within a DirectoryEntry and adds statistics to the GopherStats class.
+     * */
     protected static void gopherRecursive(HashSet<DirectoryEntry> des) throws IOException {
         for (DirectoryEntry k : des) {
             GopherResponse gr;
             if (Objects.equals(k.host, "")) {continue;}
-            //sends a gopher request to the link
 
-            try {gr = gopherSendAndRecv(k);}
+            // send a request based on information given in the DirectoryEntry k
+            try {
+                gr = gopherSendAndRecv(k);
+                if (gr == null) {continue;}
+            }
             catch(java.net.ConnectException | java.net.UnknownHostException d) {
-                System.out.printf("%s %s connection error --", k.host, k.selector);
-                GopherStats.printStats();
+                System.out.printf("%s:%d -> %s connection error\n", k.host, k.port, k.selector);
                 continue;}
 
-            // calls gopherRecursive if there are more directories within it
-            if (gr == null) {
-                continue;}
-            System.out.printf("%s: %s --\t", k.host, k.selector);
+            System.out.printf("%s:%d -> %s --\t", k.host, k.port, k.selector);
             GopherStats.printStats();
 
-            // adds gopherResponse to gopherstats and if it is a directory, calls gopherRecursive
-            if ( k.type== 49) {
-                gopherRecursive(((GopherDirectory) gr).filePaths);
-            }
-            else {
-                //TODO fix filesort
-                GopherStats.fileSort((GopherFile) gr);
-            }
+            // calls gopherRecursive if directoryEntry was a directory request
+            // if not adds it into file sort
+            if ( k.type== 49) {gopherRecursive(((GopherDirectory) gr).filePaths);}
+            else {GopherStats.fileSort((GopherFile) gr);}
         };
     }
 
+    /**
+     * Sends a request to a destination as specified from a directory
+     * Entry and reads a response.
+     *
+     * */
     protected static GopherResponse gopherSendAndRecv(DirectoryEntry de)
             throws IOException {
         Socket              sock;
