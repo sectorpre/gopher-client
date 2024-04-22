@@ -6,7 +6,12 @@ import java.util.HashSet;
  * the Gopher Server.
  */
 public class GopherStats {
-    public static HashMap<String, HashSet<String>> visitedPages = new HashMap<>();
+    public static HashSet<String> visitedPages = new HashSet<>();
+
+    // note that the ip of the external servers are used as the keys of
+    // the external server to avoid duplicate entries of the same server
+    // with different host name
+    public static HashMap<String, HashSet<Integer>> externalServers = new HashMap<>();
     public static HashSet<GopherFile> binaryMap = new HashSet<>();
     public static HashSet<GopherFile> textMap = new HashSet<>();
     public static HashSet<GopherDirectory> dirMap = new HashSet<>();
@@ -15,8 +20,9 @@ public class GopherStats {
 
     public static void printServers() {
         System.out.println("==========External servers==========");
-        for (var k : visitedPages.entrySet()) {
-            System.out.printf("Server: %s \n" , k.getKey());
+        for (var k : externalServers.entrySet()) {
+            for (var p: k.getValue())
+            System.out.printf("Server: %s:%d \n" , k.getKey(), p);
         }
 
     }
@@ -63,13 +69,11 @@ public class GopherStats {
         System.out.printf("largest binary file: %s %s %d\n", largest.host, largest.selector, largest.size);
     }
 
-    public static int pageCheck(String host, String selector) {
+    public static int pageCheck(String selector) {
         //ensures pages are not visited in a loop
-        if (visitedPages.containsKey(host)) {
-            if (visitedPages.get(host).contains(selector)) {
-                return 0;}
-        }
-        return 1;
+        if (visitedPages.contains(selector)) {return 0;}
+        else {return 1;}
+
     }
 
 

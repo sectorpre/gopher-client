@@ -16,15 +16,7 @@ public abstract class GopherResponse {
     public void read(Socket sock) throws IOException, DataExceedException, MalformedDirectory {}
 
     public void addToStats(String ip) {
-        if (GopherStats.visitedPages.containsKey(ip)) {
-            GopherStats.visitedPages.get(ip).add(selector);
-        }
-        else {
-            HashSet<String> newEntry = new HashSet<>();
-            newEntry.add(selector);
-            GopherStats.visitedPages.put(ip, newEntry);
-        }
-        GopherStats.pagesVisited += 1;
+        GopherStats.visitedPages.add(selector);
 
     }
 

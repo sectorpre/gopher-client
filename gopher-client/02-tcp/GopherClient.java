@@ -61,7 +61,7 @@ public class GopherClient {
             if (Objects.equals(k.host, "")) {continue;}
 
             // send a request based on information given in the DirectoryEntry k
-            System.out.printf("Check: %s:%d -> %s \n", k.host, k.port, k.selector);
+            //System.out.printf("Check: %s:%d -> %s \n", k.host, k.port, k.selector);
             gr = gopherSafeRequest(k);
             if (gr == null) {
                 continue;}
@@ -118,12 +118,14 @@ public class GopherClient {
         Socket              sock;
         GopherResponse gr;
 
-        String address = InetAddress.getByName(de.host).getHostAddress();
-        sock = new Socket(address, de.port);
+        String ip = InetAddress.getByName(de.host).getHostAddress();
+        sock = new Socket(ip, de.port);
         sock.setSoTimeout(1000);
 
         // if host is an external server or page is visited before, returns null
-        if (GopherStats.pageCheck(address, de.selector) == 0) {return null;}
+        if (ip.equals(GopherClient.serviceHost) && (de.port == GopherClient.servicePort)) {
+            if (GopherStats.pageCheck(de.selector) == 0) {return null;}
+        }
 
         // checks to see if file or directory
         if (de.type == 49) {gr = new GopherDirectory(de.host, de.selector);}
@@ -136,9 +138,13 @@ public class GopherClient {
 
         // closing actions
         sock.close();
-        gr.addToStats(address);
+        gr.addToStats(ip);
 
-        if (!address.equals(serviceHost)) {return null;}
+        // external address
+        if (!ip.equals(serviceHost) || !(de.port == servicePort) ) {
+            if (!GopherStats.externalServers.containsKey(ip)) {GopherStats.externalServers.put(ip, new HashSet<>());}
+            GopherStats.externalServers.get(ip).add(de.port);
+            return null;}
         return gr;
     }
 
