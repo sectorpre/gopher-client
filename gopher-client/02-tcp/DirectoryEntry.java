@@ -1,3 +1,7 @@
+/**
+ * Container representing the information received by a Gopher Client
+ * within each directory entry
+ */
 public class DirectoryEntry {
     public Integer type = 49;
     public String name = "";
