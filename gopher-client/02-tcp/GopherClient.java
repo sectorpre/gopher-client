@@ -25,6 +25,13 @@ public class GopherClient {
     static String   serviceHost = "127.0.0.1";
     static int      servicePort = 70;
 
+    // debug = 1 shows the current page the program has ran to as well
+    // as the number of files it has processed
+    static int      debug = 0;
+
+    // the number of ms before a socket timeout error is thrown
+    static int socketTimeout = 1000;
+
     /** Function to checkif a given ip: port combination is an external server*/
     protected static int externalCheck(String ip, Integer port) {
         if (!ip.equals(serviceHost) || !(port == servicePort)) {return 1;}
@@ -32,29 +39,23 @@ public class GopherClient {
     }
 
     /** Read input until EOF. Send as request to host, print response */
-
-    protected static void inputLoop(String host)
+    protected static void inputLoop()
             throws IOException, InterruptedException {
 
-        InetAddress address = InetAddress.getByName(host);
-        serviceHost = address.getHostAddress();
-
+        //starting directoryEntry which we will use to query the server
         DirectoryEntry de = new DirectoryEntry();
         de.host = serviceHost;
         de.port = servicePort;
         HashSet<DirectoryEntry> start = new HashSet<>();
         start.add(de);
 
+        System.out.println("running...");
         gopherRecursive(start);
 
-        GopherStats.printServers();
-        GopherStats.printText();
-        GopherStats.printBinary();
-        GopherStats.printErrors();
+        GopherStats.printAll();
     }
 
     /** Send our request to server */
-
     protected static void sendRequest(Socket sock, String request)
         throws IOException
     { sock.getOutputStream().write(request.getBytes("UTF-8"));}
@@ -65,22 +66,22 @@ public class GopherClient {
     protected static void gopherRecursive(HashSet<DirectoryEntry> des) {
         for (DirectoryEntry k : des) {
             GopherResponse gr;
-            if (Objects.equals(k.host, "")) {continue;}
-
             // send a request based on information given in the DirectoryEntry k
-            //System.out.printf("Check: %s:%d -> %s \n", k.host, k.port, k.selector);
             gr = gopherSafeRequest(k);
-            if (gr == null) {
-                continue;}
 
-            System.out.printf("%s:%d -> %s --\t", k.host, k.port, k.selector);
-            GopherStats.printStats();
+            // if no response for whatever reason, continue to next directoryEntry
+            if (gr == null) {continue;}
 
-            // calls gopherRecursive if directoryEntry was a directory request
-            // if not adds it into file sort
-            if (k.type== 49) {
-                if (gr.dontRecurseFlag == 1) {continue;}
-                gopherRecursive(((GopherDirectory) gr).filePaths);};
+            if (debug == 1) {
+                System.out.printf("%s:%d -> %s --\t", k.host, k.port, k.selector);
+                GopherStats.printStats();
+            }
+
+            // calls gopherRecursive if the dontRecurseFlag is not set.
+            // it will only be set in two situations
+            // - the DirectoryEntry was a file
+            // - the DirectoryEntry was for an external server
+            if (gr.dontRecurseFlag == 0) {gopherRecursive(((GopherDirectory) gr).filePaths);};
 
         };
     }
@@ -143,38 +144,43 @@ public class GopherClient {
             if (GopherStats.pageCheck(de.selector) == 0) {return null;}
         }
 
+        // new socket creation
         sock = new Socket(ip, de.port);
-        sock.setSoTimeout(1000);
+        sock.setSoTimeout(socketTimeout);
 
         // checks to see if file or directory
         if (de.type == 49) {gr = new GopherDirectory(de.host, ip, de.selector, de.port);}
         else {gr = new GopherFile(de.host, ip,de.selector,de.port, de.type);}
 
-        // sending and reading
+        // sending a request to remote server
         if (!de.selector.isEmpty()) {sendRequest(sock, de.selector);}
         sendRequest(sock, "\r\n");
+
+        // reads from socket and stores information within gr
         gr.read(sock);
 
-        // closing actions
+        // closes socket and adds gopherResponse into the gopherStats
         sock.close();
         gr.addToStats();
 
-        // external address
+        // checks if the ip is an external address if it is, sets the dontRecurseFlag
         if (externalCheck(ip, de.port) == 1) {
             gr.dontRecurseFlag = 1;}
+
         return gr;
     }
 
     /** Handle command line arguments. */
-
-    protected static void processArgs(String[] args)
-    {
+    protected static void processArgs(String[] args) throws UnknownHostException {
         //  This program has only two CLI arguments, and we know the order.
         //  For any program with more than two args, use a loop or package.
         if (args.length > 0) {
-            serviceHost = args[0];
+            serviceHost = InetAddress.getByName(args[0]).getHostAddress();
             if (args.length > 1) {
                 servicePort = Integer.parseInt(args[1]);
+            }
+            if (args.length > 2) {
+                debug = Integer.parseInt(args[2]);
             }
         }
     }
@@ -183,10 +189,9 @@ public class GopherClient {
     {
         try {
             processArgs(args);
-            inputLoop(serviceHost);
+            inputLoop();
             System.out.println("Done.");
         } catch (Exception e) {
-            System.out.println(e.toString());
             System.exit(-1);   
         }
     }

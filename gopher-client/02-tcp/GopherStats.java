@@ -19,6 +19,13 @@ public class GopherStats {
     public static Integer pagesVisited = 0;
     public static int[] errorMap = {0,0,0,0,0,0};
 
+    public static void printAll() {
+        printStats();
+        printServers();
+        printText();
+        printBinary();
+        printErrors();
+    }
 
     public static void printErrors() {
         System.out.println("========== Error count ==========");

@@ -1,6 +1,5 @@
 import java.io.IOException;
 import java.net.Socket;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class GopherDirectory extends GopherResponse {
@@ -13,24 +12,31 @@ public class GopherDirectory extends GopherResponse {
     @Override
     public void read(Socket sock) throws IOException, MalformedDirectory {
         int     ch;
+
+        // indicates that the current directory entry is an information listing
+        // Hence, the information for this current directory entry is not stored
         int skipPrint = 0;
+
+        // accumulator for storing the port string
         String portAcc = "";
+
         DirectoryEntry de = new DirectoryEntry();
+
+        // set of DirectoryEntries that will be stored in the GopherDirectory response
         HashSet<DirectoryEntry> paths = new HashSet<>();
-        int nxthead = 0;
+
+        // for keeping track of the current header
         Header header = new Header();
 
         while (true) {
             ch = sock.getInputStream().read();
-
-            // checks for special characters
+            // ========Checks for the current character========
+            // checks for special character
             if (ch < 0) {break;}
+            // indicates last character of a directory entry
             else if (ch == '\n') {
-                //System.out.printf("host:%s selector:%s port:%s\n", de.host,de.selector,portAcc );
                 if (skipPrint == 0 ) {
-                    if (header.currentHeader != Header.HeaderType.PORT) {
-                        throw new MalformedDirectory();
-                    }
+                    if (header.currentHeader != Header.HeaderType.PORT) {throw new MalformedDirectory();}
                     de.port = Integer.valueOf(portAcc);
                     paths.add(de);
                 }
@@ -40,19 +46,24 @@ public class GopherDirectory extends GopherResponse {
                 skipPrint = 0;
                 continue;
             }
+            // indicates a break between the DirectoryEntry fields
             else if (ch == '\t') {
                 header.nextHeader();
-                nxthead += 1;
                 continue;
             }
 
+            // if information type directory entry, doesn't bother
+            // accumulating data
             if (skipPrint == 1) continue;
 
-            // checks TYPE byte
+            // ========Checks for field========
             if (header.currentHeader == Header.HeaderType.TYPE) {
                 // of type "information" so skip
                 if (ch == 105) {skipPrint = 1;}
+
+                // last entry of directory listing
                 else if (ch == 46) {break;}
+
                 de.type = ch;
                 header.nextHeader();
             }

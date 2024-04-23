@@ -14,6 +14,7 @@ public class GopherFile extends GopherResponse {
     public GopherFile(String host, String ip, String filepath, Integer port, Integer ft) {
         super(host, ip, filepath, port);
         fileType = ft;
+        dontRecurseFlag = 1;
     }
 
     public GopherFile() {
