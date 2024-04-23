@@ -149,8 +149,8 @@ public class GopherClient {
         sock.setSoTimeout(socketTimeout);
 
         // checks to see if file or directory
-        if (de.type == 49) {gr = new GopherDirectory(de.host, ip, de.selector, de.port);}
-        else {gr = new GopherFile(de.host, ip,de.selector,de.port, de.type);}
+        if (de.type == 49) {gr = new GopherDirectory(de, ip);}
+        else {gr = new GopherFile(de, ip);}
 
         // sending a request to remote server
         if (!de.selector.isEmpty()) {sendRequest(sock, de.selector);}

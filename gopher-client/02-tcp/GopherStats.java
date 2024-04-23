@@ -59,11 +59,11 @@ public class GopherStats {
             if (k.size < smallest.size) {smallest = k;}
             if (k.size > largest.size) {largest = k;}
 
-            System.out.printf("%s:%s size - %d\n", k.host, k.selector, k.size);
+            System.out.printf("%s:%s size - %d\n", k.de.host, k.de.selector, k.size);
         }
         System.out.println("==============================");
-        System.out.printf("smallest text file: %s %s %d\n", smallest.host, smallest.selector, smallest.size);
-        System.out.printf("largest text file: %s %s %d\n", largest.host, largest.selector, largest.size);
+        System.out.printf("smallest text file: %s %s %d\n", smallest.de.host, smallest.de.selector, smallest.size);
+        System.out.printf("largest text file: %s %s %d\n", largest.de.host, largest.de.selector, largest.size);
         System.out.println("==============================");
         System.out.printf("%s\n", smallest.fileData);
         System.out.println("==============================");
@@ -83,11 +83,11 @@ public class GopherStats {
             if (k.size < smallest.size) {smallest = k;}
             if (k.size > largest.size) {largest = k;}
 
-            System.out.printf("%s:%s size - %d\n", k.host, k.selector, k.size);
+            System.out.printf("%s:%s size - %d\n", k.de.host, k.de.selector, k.size);
         }
         System.out.println("==============================");
-        System.out.printf("smallest binary file: %s %s %d\n", smallest.host, smallest.selector, smallest.size);
-        System.out.printf("largest binary file: %s %s %d\n", largest.host, largest.selector, largest.size);
+        System.out.printf("smallest binary file: %s %s %d\n", smallest.de.host, smallest.de.selector, smallest.size);
+        System.out.printf("largest binary file: %s %s %d\n", largest.de.host, largest.de.selector, largest.size);
     }
 
     public static int pageCheck(String selector) {

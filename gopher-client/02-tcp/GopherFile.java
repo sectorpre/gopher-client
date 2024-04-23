@@ -7,18 +7,16 @@ import java.net.Socket;
 public class GopherFile extends GopherResponse {
     int MaximumFileSize = 100000;
     int size = -1;
-    Integer fileType;
     String fileData = "";
 
 
-    public GopherFile(String host, String ip, String filepath, Integer port, Integer ft) {
-        super(host, ip, filepath, port);
-        fileType = ft;
+    public GopherFile(DirectoryEntry de, String ip) {
+        super(de, ip);
         dontRecurseFlag = 1;
     }
 
     public GopherFile() {
-        super("", "","", 0);
+        super(null, "");
     }
 
     /**
@@ -51,10 +49,10 @@ public class GopherFile extends GopherResponse {
     @Override
     public void addToStats() {
         super.addToStats();
-        if (this.fileType == 57) {
+        if (de.type== 57) {
             GopherStats.binaryMap.add(this);
         }
-        else if (this.fileType == 48) {
+        else if (de.type == 48) {
             GopherStats.textMap.add(this);
         }
     }

@@ -5,8 +5,8 @@ import java.util.HashSet;
 public class GopherDirectory extends GopherResponse {
     HashSet<DirectoryEntry> filePaths = new HashSet<>();
 
-    public GopherDirectory(String host, String ip, String selector, Integer port) {
-        super(host, ip, selector, port);
+    public GopherDirectory(DirectoryEntry de, String ip) {
+        super(de, ip);
     }
 
     @Override
