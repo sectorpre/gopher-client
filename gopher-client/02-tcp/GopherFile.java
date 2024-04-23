@@ -11,9 +11,13 @@ public class GopherFile extends GopherResponse {
     String fileData = "";
 
 
-    public GopherFile(String host ,String filepath, Integer ft) {
-        super(host, filepath);
+    public GopherFile(String host, String ip, String filepath, Integer port, Integer ft) {
+        super(host, ip, filepath, port);
         fileType = ft;
+    }
+
+    public GopherFile() {
+        super("", "","", 0);
     }
 
     /**
@@ -42,11 +46,10 @@ public class GopherFile extends GopherResponse {
     /**
      * Adds this file to the statistics based on its type.
      *
-     * @param ip The IP address associated with the request.
      */
     @Override
-    public void addToStats(String ip) {
-        super.addToStats(ip);
+    public void addToStats() {
+        super.addToStats();
         if (this.fileType == 57) {
             GopherStats.binaryMap.add(this);
         }

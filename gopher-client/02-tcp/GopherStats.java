@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -16,21 +17,34 @@ public class GopherStats {
     public static HashSet<GopherFile> textMap = new HashSet<>();
     public static HashSet<GopherDirectory> dirMap = new HashSet<>();
     public static Integer pagesVisited = 0;
+    public static int[] errorMap = {0,0,0,0,0,0};
+
+
+    public static void printErrors() {
+        System.out.println("========== Error count ==========");
+        System.out.printf("unknown server(unknown host exception): %d\n", errorMap[0]);
+        System.out.printf("server unresponsive(socket timeout) %d\n", errorMap[1]);
+        System.out.printf("connect exception(unable to connect): %d\n", errorMap[2]);
+        System.out.printf("data exceeded limit: %d\n", errorMap[3]);
+        System.out.printf("malformed directory: %d\n", errorMap[4]);
+        System.out.printf("IOexception: %d\n", errorMap[5]);
+
+    }
 
 
     public static void printServers() {
         System.out.println("==========External servers==========");
         for (var k : externalServers.entrySet()) {
             for (var p: k.getValue())
-            System.out.printf("Server: %s:%d \n" , k.getKey(), p);
+                System.out.printf("Server: %s:%d \n" , k.getKey(), p);
         }
 
     }
 
     public static void printText() {
         System.out.println("==========Text files==========");
-        GopherFile largest = new GopherFile("","", 0);
-        GopherFile smallest = new GopherFile("","", 0);;
+        GopherFile largest = new GopherFile();
+        GopherFile smallest = new GopherFile();
         for (var k: textMap) {
             if (largest.size == -1) {largest = k;}
             if (smallest.size == -1) {smallest = k;}
@@ -51,8 +65,8 @@ public class GopherStats {
     }
 
     public static void printBinary() {
-        GopherFile largest = new GopherFile("","", 0);
-        GopherFile smallest = new GopherFile("","", 0);;
+        GopherFile largest = new GopherFile();
+        GopherFile smallest = new GopherFile();;
 
         System.out.println("==========Binary files==========");
         for (var k: binaryMap) {

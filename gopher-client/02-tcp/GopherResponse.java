@@ -6,17 +6,26 @@ import java.util.HashSet;
 public abstract class GopherResponse {
     public String selector;
     public String host;
+    public String ip;
+    public Integer port;
+    public Integer dontRecurseFlag = 0;
 
-    public GopherResponse(String host, String selector) {
+    public GopherResponse(String host, String ip, String selector, Integer port) {
         this.host = host;
         this.selector = selector;
+        this.ip = ip;
+        this.port = port;
     }
 
 
     public void read(Socket sock) throws IOException, DataExceedException, MalformedDirectory {}
 
-    public void addToStats(String ip) {
+    public void addToStats() {
         GopherStats.visitedPages.add(selector);
+        GopherStats.pagesVisited += 1;
+        if (!GopherStats.externalServers.containsKey(ip)) {
+            GopherStats.externalServers.put(ip, new HashSet<>());}
+        GopherStats.externalServers.get(ip).add(port);
 
     }
 

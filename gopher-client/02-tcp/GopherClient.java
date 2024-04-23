@@ -25,6 +25,12 @@ public class GopherClient {
     static String   serviceHost = "127.0.0.1";
     static int      servicePort = 70;
 
+    /** Function to checkif a given ip: port combination is an external server*/
+    protected static int externalCheck(String ip, Integer port) {
+        if (!ip.equals(serviceHost) || !(port == servicePort)) {return 1;}
+        return 0;
+    }
+
     /** Read input until EOF. Send as request to host, print response */
 
     protected static void inputLoop(String host)
@@ -44,6 +50,7 @@ public class GopherClient {
         GopherStats.printServers();
         GopherStats.printText();
         GopherStats.printBinary();
+        GopherStats.printErrors();
     }
 
     /** Send our request to server */
@@ -71,7 +78,10 @@ public class GopherClient {
 
             // calls gopherRecursive if directoryEntry was a directory request
             // if not adds it into file sort
-            if (k.type== 49) {gopherRecursive(((GopherDirectory) gr).filePaths);}
+            if (k.type== 49) {
+                if (gr.dontRecurseFlag == 1) {continue;}
+                gopherRecursive(((GopherDirectory) gr).filePaths);};
+
         };
     }
 
@@ -84,24 +94,32 @@ public class GopherClient {
         try {gr = gopherConnect(k);}
         catch (java.net.UnknownHostException d) {
             System.out.printf("%s:%d -> %s -- unknown server\n", k.host, k.port, k.selector);
+            GopherStats.errorMap[0] += 1;
             return null;
         }
         catch (java.net.SocketTimeoutException d) {
             System.out.printf("%s:%d -> %s -- server unresponsive\n", k.host, k.port, k.selector);
+            GopherStats.errorMap[1] += 1;
             return null;
         }
         catch(java.net.ConnectException d ) {
             System.out.printf("%s:%d -> %s -- connection error \n", k.host, k.port, k.selector);
+            GopherStats.errorMap[2] += 1;
             return null;
         }
         catch (GopherResponse.DataExceedException d) {
             System.out.printf("%s:%d -> %s -- data exceeded limit\n", k.host, k.port, k.selector);
+            GopherStats.errorMap[3] += 1;
             return null;
         }
         catch (GopherResponse.MalformedDirectory d) {
             System.out.printf("%s:%d -> %s -- malformed directory exception\n", k.host, k.port, k.selector);
+            GopherStats.errorMap[4] += 1;
             return null;
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
+            System.out.printf("%s:%d -> %s -- IOException\n", k.host, k.port, k.selector);
+            GopherStats.errorMap[5] += 1;
             return null;
         }
         return gr;
@@ -119,17 +137,18 @@ public class GopherClient {
         GopherResponse gr;
 
         String ip = InetAddress.getByName(de.host).getHostAddress();
-        sock = new Socket(ip, de.port);
-        sock.setSoTimeout(1000);
 
-        // if host is an external server or page is visited before, returns null
-        if (ip.equals(GopherClient.serviceHost) && (de.port == GopherClient.servicePort)) {
+        // if page is visited before, returns null
+        if (externalCheck(ip, de.port) == 0) {
             if (GopherStats.pageCheck(de.selector) == 0) {return null;}
         }
 
+        sock = new Socket(ip, de.port);
+        sock.setSoTimeout(1000);
+
         // checks to see if file or directory
-        if (de.type == 49) {gr = new GopherDirectory(de.host, de.selector);}
-        else {gr = new GopherFile(de.host, de.selector, de.type);}
+        if (de.type == 49) {gr = new GopherDirectory(de.host, ip, de.selector, de.port);}
+        else {gr = new GopherFile(de.host, ip,de.selector,de.port, de.type);}
 
         // sending and reading
         if (!de.selector.isEmpty()) {sendRequest(sock, de.selector);}
@@ -138,13 +157,11 @@ public class GopherClient {
 
         // closing actions
         sock.close();
-        gr.addToStats(ip);
+        gr.addToStats();
 
         // external address
-        if (!ip.equals(serviceHost) || !(de.port == servicePort) ) {
-            if (!GopherStats.externalServers.containsKey(ip)) {GopherStats.externalServers.put(ip, new HashSet<>());}
-            GopherStats.externalServers.get(ip).add(de.port);
-            return null;}
+        if (externalCheck(ip, de.port) == 1) {
+            gr.dontRecurseFlag = 1;}
         return gr;
     }
 
