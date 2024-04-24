@@ -1,4 +1,3 @@
-
 /**
  * Gopher Client which recursively discovers files/directories
  * and prints results at the end of exectuion
@@ -11,7 +10,6 @@
  *
  *  using code written by Hugh Fisher u9011925 as a template
  */
-
 
 import java.io.*;
 import java.net.*;
@@ -37,9 +35,7 @@ public class GopherClient {
     }
 
     /** Read input until EOF. Send as request to host, print response */
-    protected static void inputLoop()
-            throws IOException, InterruptedException {
-
+    protected static void inputLoop() {
         //starting directoryEntry which we will use to query the server
         DirectoryEntry de = new DirectoryEntry();
         de.host = serviceHost;

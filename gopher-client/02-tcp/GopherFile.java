@@ -15,17 +15,10 @@ public class GopherFile extends GopherResponse {
         dontRecurseFlag = 1;
     }
 
-    public GopherFile() {
-        super(null, "");
-    }
-
     /**
      * Reads the file data from the given socket. If the data being read
      * exceeds MaximumFileSize, a DataExceedException is thrown.
      *
-     * @param sock The socket to read data from.
-     * @throws IOException         If an I/O error occurs.
-     * @throws DataExceedException If the data exceeds a certain limit.
      */
     @Override
     public void read(Socket sock) throws IOException, DataExceedException {
@@ -54,6 +47,7 @@ public class GopherFile extends GopherResponse {
         else if (de.type == 48) {
             GopherStats.textMap.add(this);
         }
+        
     }
 }
 

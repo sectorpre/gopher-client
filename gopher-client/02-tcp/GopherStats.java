@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -16,14 +15,28 @@ import java.util.HashSet;
 public class GopherStats {
     public static HashSet<String> visitedPages = new HashSet<>();
 
+    // Hashmap of external servers which the client has visited which maps
+    // a string representing the ip address to a HashSet of the ports which
+    // were visited.
+    //
     // note that the ip of the external servers are used as the keys of
     // the external server to avoid duplicate entries of the same server
     // with different host name
     public static HashMap<String, HashSet<Integer>> externalServers = new HashMap<>();
+
+    // externalServers that fail to connect
     public static HashSet<DirectoryEntry> unresponsive = new HashSet<>();
+
+    // all binary files
     public static HashSet<GopherFile> binaryMap = new HashSet<>();
+
+    // all text files
     public static HashSet<GopherFile> textMap = new HashSet<>();
+
+    // all gopher directories
     public static HashSet<GopherDirectory> dirMap = new HashSet<>();
+
+    // number of pages that the client visited
     public static Integer pagesVisited = 0;
     public static int[] errorMap = {0,0,0,0,0,0,0};
 
@@ -66,8 +79,8 @@ public class GopherStats {
 
     public static void printText() {
         System.out.println("==========Text files==========");
-        GopherFile largest = new GopherFile();
-        GopherFile smallest = new GopherFile();
+        GopherFile largest = new GopherFile(null, "");
+        GopherFile smallest = new GopherFile(null, "");
         for (var k: textMap) {
             if (largest.size == -1) {largest = k;}
             if (smallest.size == -1) {smallest = k;}
@@ -88,8 +101,8 @@ public class GopherStats {
     }
 
     public static void printBinary() {
-        GopherFile largest = new GopherFile();
-        GopherFile smallest = new GopherFile();;
+        GopherFile largest = new GopherFile(null, "");
+        GopherFile smallest = new GopherFile(null, "");
 
         System.out.println("==========Binary files==========");
         for (var k: binaryMap) {
