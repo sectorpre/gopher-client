@@ -1,11 +1,15 @@
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Represents a Gopher response in the form of a file.
  */
 public class GopherFile extends GopherResponse {
     int MaximumFileSize = 100000;
+    byte[] buffer = new byte[MaximumFileSize];
     int size = -1;
     String fileData = "";
 
@@ -24,15 +28,17 @@ public class GopherFile extends GopherResponse {
     public void read(Socket sock) throws IOException, DataExceedException {
         int     ch;
         size = 0;
-        do {
+        while (true) {
             if (size > MaximumFileSize) {
                 throw new GopherResponse.DataExceedException();
             }
             ch = sock.getInputStream().read();
-            fileData += ch;
-            ;
+            if (ch < 0) {
+                break;
+            }
+            fileData += (char) ch;
             size += 1;
-        } while (ch >= 0);
+        }
     }
 
     /**
@@ -47,7 +53,20 @@ public class GopherFile extends GopherResponse {
         else if (de.type == 48) {
             GopherStats.textMap.add(this);
         }
-        
+        String fileName = Paths.get(de.selector).getFileName().toString(); // Name of the file to be created
+
+        try {
+            // Get the current directory
+            String currentDirectory = System.getProperty("user.dir");
+            // Resolve the file path in the current directory
+            Path filePath = Paths.get(currentDirectory, fileName);
+            // Write content to the file
+            Files.write(filePath, fileData.getBytes());
+
+            System.out.println("File '" + fileName + "' has been created in the current directory.");
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+        }
     }
 }
 
