@@ -4,7 +4,14 @@ import java.util.HashSet;
 
 /**
  * Class for storing statistics for all connections/interactions with
- * the Gopher Server.
+ * the Gopher Server. The GopherStats and GopherClient relationship uses
+ * as a pseudo observer pattern, where the GopherClient acts as a publisher
+ * which calls GopherResponse.addToStats for each GopherResponse it receives,
+ * wherein GopherStats is responsible for storing the information stored
+ * within each GopherResponse in its fields. The GopherStats itself does not
+ * modify/interact with its fields and merely prints all its information as
+ * specified within its methods.
+ *
  */
 public class GopherStats {
     public static HashSet<String> visitedPages = new HashSet<>();
@@ -13,15 +20,17 @@ public class GopherStats {
     // the external server to avoid duplicate entries of the same server
     // with different host name
     public static HashMap<String, HashSet<Integer>> externalServers = new HashMap<>();
+    public static HashSet<DirectoryEntry> unresponsive = new HashSet<>();
     public static HashSet<GopherFile> binaryMap = new HashSet<>();
     public static HashSet<GopherFile> textMap = new HashSet<>();
     public static HashSet<GopherDirectory> dirMap = new HashSet<>();
     public static Integer pagesVisited = 0;
-    public static int[] errorMap = {0,0,0,0,0,0};
+    public static int[] errorMap = {0,0,0,0,0,0,0};
 
     public static void printAll() {
         printStats();
         printServers();
+        printDownServers();
         printText();
         printBinary();
         printErrors();
@@ -35,6 +44,7 @@ public class GopherStats {
         System.out.printf("data exceeded limit: %d\n", errorMap[3]);
         System.out.printf("malformed directory: %d\n", errorMap[4]);
         System.out.printf("IOexception: %d\n", errorMap[5]);
+        System.out.printf("errortype in directory listing: %d\n", errorMap[6]);
 
     }
 
@@ -45,7 +55,13 @@ public class GopherStats {
             for (var p: k.getValue())
                 System.out.printf("Server: %s:%d \n" , k.getKey(), p);
         }
+    }
 
+    public static void printDownServers() {
+        System.out.println("==========Servers that are down==========");
+        for (var k: unresponsive) {
+            System.out.printf("Server: %s:%d\n", k.host, k.port);
+        }
     }
 
     public static void printText() {
@@ -89,14 +105,6 @@ public class GopherStats {
         System.out.printf("smallest binary file: %s %s %d\n", smallest.de.host, smallest.de.selector, smallest.size);
         System.out.printf("largest binary file: %s %s %d\n", largest.de.host, largest.de.selector, largest.size);
     }
-
-    public static int pageCheck(String selector) {
-        //ensures pages are not visited in a loop
-        if (visitedPages.contains(selector)) {return 0;}
-        else {return 1;}
-
-    }
-
 
     public static void printStats() {
         System.out.printf("pages visited: %d, directories: %d ,text files: %d, binary files %d\n",

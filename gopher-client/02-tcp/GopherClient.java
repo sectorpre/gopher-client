@@ -1,23 +1,21 @@
 
-/** TCP echo client program for ANU COMP3310.
+/**
+ * Gopher Client which recursively discovers files/directories
+ * and prints results at the end of exectuion
  *
  *  Run with
- *      java TcpClient [ IP addr ] [ port ]
+ *      java GopherClient [ IP addr/hostname] [ port ] [debug]
  *
- *  Written by Hugh Fisher u9011925, ANU, 2024
- *  Released under Creative Commons CC0 Public Domain Dedication
- *  This code may be freely copied and modified for any purpose
+ *
+ *  Written by Tay Shao An u7553225, ANU, 2024
+ *
+ *  using code written by Hugh Fisher u9011925 as a template
  */
 
 
 import java.io.*;
 import java.net.*;
-import java.lang.Thread;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Objects;
-import java.util.regex.Pattern;
-
 
 public class GopherClient {
 
@@ -51,7 +49,6 @@ public class GopherClient {
 
         System.out.println("running...");
         gopherRecursive(start);
-
         GopherStats.printAll();
     }
 
@@ -105,6 +102,7 @@ public class GopherClient {
         }
         catch(java.net.ConnectException d ) {
             System.out.printf("%s:%d -> %s -- connection error \n", k.host, k.port, k.selector);
+            GopherStats.unresponsive.add(k);
             GopherStats.errorMap[2] += 1;
             return null;
         }
@@ -141,7 +139,7 @@ public class GopherClient {
 
         // if page is visited before, returns null
         if (externalCheck(ip, de.port) == 0) {
-            if (GopherStats.pageCheck(de.selector) == 0) {return null;}
+            if (GopherStats.visitedPages.contains(de.selector)) {return null;}
         }
 
         // new socket creation

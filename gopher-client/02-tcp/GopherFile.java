@@ -44,7 +44,6 @@ public class GopherFile extends GopherResponse {
 
     /**
      * Adds this file to the statistics based on its type.
-     *
      */
     @Override
     public void addToStats() {

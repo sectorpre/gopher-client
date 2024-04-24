@@ -2,6 +2,10 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashSet;
 
+/**
+ * Implementation of GopherResponse representing a Gopher response of a directory
+ * entry list.
+ * */
 public class GopherDirectory extends GopherResponse {
     HashSet<DirectoryEntry> filePaths = new HashSet<>();
 
@@ -9,6 +13,11 @@ public class GopherDirectory extends GopherResponse {
         super(de, ip);
     }
 
+    /**
+     * Reads a directory entry list from a given socket and adds it to
+     * the filePaths field within GopherDirectory. Throws MalformedDirectory if
+     * the directory is formatted wrongly.
+     * */
     @Override
     public void read(Socket sock) throws IOException, MalformedDirectory {
         int     ch;
@@ -26,7 +35,7 @@ public class GopherDirectory extends GopherResponse {
         HashSet<DirectoryEntry> paths = new HashSet<>();
 
         // for keeping track of the current header
-        Header header = new Header();
+        Header header = Header.getInstance();
 
         while (true) {
             ch = sock.getInputStream().read();
@@ -64,6 +73,10 @@ public class GopherDirectory extends GopherResponse {
                 // last entry of directory listing
                 else if (ch == 46) {break;}
 
+                else if (ch == 51) {
+                    GopherStats.errorMap[6] += 1;
+                }
+
                 de.type = ch;
                 header.nextHeader();
             }
@@ -81,6 +94,5 @@ public class GopherDirectory extends GopherResponse {
     public void addToStats() {
         super.addToStats();
         GopherStats.dirMap.add(this);
-
     }
 }
