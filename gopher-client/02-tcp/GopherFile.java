@@ -27,10 +27,13 @@ public class GopherFile extends GopherResponse {
     public void read(Socket sock) throws IOException, DataExceedException {
         int     ch;
         size = 0;
+        String lastlineCheck = "";
+
         while (true) {
             if (size > MaximumFileSize) {
                 throw new GopherResponse.DataExceedException();
             }
+
             ch = sock.getInputStream().read();
             if (ch < 0) {
                 break;
@@ -38,6 +41,11 @@ public class GopherFile extends GopherResponse {
             fileData += (char) ch;
             size += 1;
         }
+        String lastThreeCharacters = fileData.substring(Math.max(fileData.length() - 3, 0));
+        if (!lastThreeCharacters.equals(".\r\n") && de.type == 48) {
+            throw new IOException("bad text file format");
+        }
+
     }
 
     /**
@@ -45,6 +53,7 @@ public class GopherFile extends GopherResponse {
      */
     @Override
     public void addToStats() throws IOException {
+        saveToFile();
         super.addToStats();
         if (de.type== 57) {
             GopherStats.binaryMap.add(this);
@@ -52,7 +61,6 @@ public class GopherFile extends GopherResponse {
         else if (de.type == 48) {
             GopherStats.textMap.add(this);
         }
-        saveToFile();
     }
 
     /**
@@ -61,11 +69,8 @@ public class GopherFile extends GopherResponse {
     public void saveToFile() throws IOException {
         String fileName = Paths.get(de.selector).getFileName().toString(); // Name of the file to be created
 
-
         // Get the current directory
         String currentDirectory = System.getProperty("user.dir");
-
-        // Resolve the file path in the current directory
         Path filePath = Paths.get(currentDirectory, fileName);
 
         // Write content to the file
