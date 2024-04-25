@@ -8,7 +8,7 @@ import java.nio.file.Paths;
  * Represents a Gopher response in the form of a file.
  */
 public class GopherFile extends GopherResponse {
-    int MaximumFileSize = 100000;
+    static int MaximumFileSize = 100000;
     int size = -1;
     String fileData = "";
 
@@ -18,32 +18,46 @@ public class GopherFile extends GopherResponse {
         dontRecurseFlag = 1;
     }
 
+    public static class DataExceedException extends GopherResponseError {
+        public DataExceedException() {
+        }
+    }
+
+    public static class FileFormatError extends GopherResponseError {
+        public FileFormatError() {
+
+        }
+
+    }
+
     /**
      * Reads the file data from the given socket. If the data being read
      * exceeds MaximumFileSize, a DataExceedException is thrown.
      *
      */
     @Override
-    public void read(Socket sock) throws IOException, DataExceedException {
+    public void read(Socket sock) throws IOException, DataExceedException, FileFormatError {
         int     ch;
         size = 0;
-        String lastlineCheck = "";
 
         while (true) {
+            // if the amount of data being read exceeds the maximum file size
+            // throws an error
             if (size > MaximumFileSize) {
-                throw new GopherResponse.DataExceedException();
+                throw new DataExceedException();
             }
 
             ch = sock.getInputStream().read();
-            if (ch < 0) {
-                break;
-            }
+            if (ch < 0) {break;}
             fileData += (char) ch;
             size += 1;
         }
+        // ensures that a text block is terminated with a lastline string
+        // of characters as specified in rfc1436:
+        // TextFile  ::= {TextBlock} Lastline
         String lastThreeCharacters = fileData.substring(Math.max(fileData.length() - 3, 0));
         if (!lastThreeCharacters.equals(".\r\n") && de.type == 48) {
-            throw new IOException("bad text file format");
+            throw new FileFormatError();
         }
 
     }

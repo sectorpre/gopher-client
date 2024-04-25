@@ -119,20 +119,29 @@ public class GopherClient {
             GopherStats.errorMap[2] += 1;
             return null;
         }
-        catch (GopherResponse.DataExceedException d) {
+        catch (GopherFile.DataExceedException d) {
             errorMessage = String.format("%s:%d -> %s -- data exceeded limit", k.host, k.port, k.selector);
             GopherStats.errorMap[3] += 1;
             return null;
         }
-        catch (GopherResponse.MalformedDirectory d) {
+        catch (GopherDirectory.MalformedDirectory d) {
             errorMessage = String.format("%s:%d -> %s -- malformed directory exception", k.host, k.port, k.selector);
             GopherStats.errorMap[4] += 1;
+            return null;
+        }
+        catch (GopherFile.FileFormatError d) {
+            errorMessage = String.format("%s:%d -> %s -- text file format error", k.host, k.port, k.selector);
+            GopherStats.errorMap[7] += 1;
             return null;
         }
         catch (IOException e) {
             errorMessage = String.format("%s:%d -> %s -- %s", k.host, k.port, k.selector, e.getMessage());
             GopherStats.errorMap[5] += 1;
             return null;
+        }
+        catch (GopherResponse.GopherResponseError e) {
+            // parent class GopherResponseError should not be thrown
+            throw new RuntimeException(e);
         }
         return gr;
     }
@@ -144,7 +153,7 @@ public class GopherClient {
      *
      * */
     protected static GopherResponse gopherConnect(DirectoryEntry de)
-            throws IOException, GopherResponse.DataExceedException, GopherResponse.MalformedDirectory {
+            throws IOException, GopherResponse.GopherResponseError {
         Socket              sock;
         GopherResponse gr;
 

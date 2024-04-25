@@ -26,7 +26,7 @@ public abstract class GopherResponse {
      * Abstract function representing how data should be processed when it is read from a socket.
      * I abstracted this method as it only needs to be declared in subclasses
      * */
-    public abstract void read(Socket sock) throws IOException, DataExceedException, MalformedDirectory;
+    public abstract void read(Socket sock) throws IOException, GopherResponseError;
 
     /**
      * Method which adds relevant information of the response to the GopherStats class. Each
@@ -40,15 +40,9 @@ public abstract class GopherResponse {
         GopherStats.externalServers.get(ip).add(de.port);
     }
 
-    public static class DataExceedException extends Exception {
-        public DataExceedException() {
-        }
+    public abstract static class GopherResponseError extends Exception {
     }
 
-    public static class MalformedDirectory extends Exception {
-        public MalformedDirectory() {
-        }
-    }
 }
 
 

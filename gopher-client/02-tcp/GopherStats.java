@@ -38,7 +38,7 @@ public class GopherStats {
 
     // number of pages that the client visited
     public static Integer pagesVisited = 0;
-    public static int[] errorMap = {0,0,0,0,0,0,0};
+    public static int[] errorMap = {0,0,0,0,0,0,0,0};
 
     static String   serviceHost = "127.0.0.1";
     static int      servicePort = 70;
@@ -60,11 +60,12 @@ public class GopherStats {
      * */
     public static void printErrors() {
         System.out.println("========== Error count ==========");
-        System.out.printf("unknown server(unknown host exception): %d\n", errorMap[0]);
-        System.out.printf("server unresponsive(socket timeout) %d\n", errorMap[1]);
-        System.out.printf("connect exception(unable to connect): %d\n", errorMap[2]);
-        System.out.printf("data exceeded limit: %d\n", errorMap[3]);
-        System.out.printf("malformed directory: %d\n", errorMap[4]);
+        System.out.printf("unknown server (java.net.UnknownHostException d) : %d\n", errorMap[0]);
+        System.out.printf("server unresponsive (java.net.SocketTimeoutException d): %d\n", errorMap[1]);
+        System.out.printf("connect exception (java.net.ConnectException d ): %d\n", errorMap[2]);
+        System.out.printf("data exceeded limit (GopherFile.DataExceedException d): %d\n", errorMap[3]);
+        System.out.printf("malformed directory (GopherDirectory.MalformedDirectory d): %d\n", errorMap[4]);
+        System.out.printf("text file formatted wrongly (GopherFile.FileFormatError): %d\n", errorMap[7]);
         System.out.printf("IOexception: %d\n", errorMap[5]);
         System.out.printf("errortype in directory listing: %d\n", errorMap[6]);
 

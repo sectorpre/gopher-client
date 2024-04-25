@@ -13,13 +13,18 @@ public class GopherDirectory extends GopherResponse {
         super(de, ip);
     }
 
+    public static class MalformedDirectory extends GopherResponseError {
+        public MalformedDirectory() {
+        }
+    }
+
     /**
      * Reads a directory entry list from a given socket and adds it to
      * the filePaths field within GopherDirectory. Throws MalformedDirectory if
      * the directory is formatted wrongly.
      * */
     @Override
-    public void read(Socket sock) throws IOException, MalformedDirectory {
+    public void read(Socket sock) throws IOException, MalformedDirectory{
         int     ch;
 
         // indicates that the current directory entry is an information listing
@@ -97,4 +102,6 @@ public class GopherDirectory extends GopherResponse {
         super.addToStats();
         GopherStats.dirMap.add(this);
     }
+
+
 }
