@@ -10,7 +10,7 @@ public class Header {
     private static Header instance;
 
     // Field representing the currentHeader being processed by the socket
-    public HeaderType currentHeader = HeaderType.TYPE;
+    public static HeaderType currentHeader = HeaderType.TYPE;
 
     /**
      * enum representing each field the socket could be currently processing
@@ -22,13 +22,6 @@ public class Header {
         HOST,
         PORT
 
-    }
-
-    public static Header getInstance() {
-        if (instance == null) {
-            instance = new Header();
-        }
-        return instance;
     }
 
     /**
@@ -57,6 +50,17 @@ public class Header {
 
     public void setHeader(HeaderType h) {
         currentHeader = h;
+    }
+
+    public HeaderType getHeader() {
+        return currentHeader;
+    }
+
+    public static Header getInstance() {
+        if (instance == null) {
+            instance = new Header();
+        }
+        return instance;
     }
 
 }

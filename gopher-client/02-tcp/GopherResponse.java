@@ -11,6 +11,7 @@ import java.util.HashSet;
  * */
 public abstract class GopherResponse {
     public DirectoryEntry de;
+    public String errorMessage;
     public String ip;
     public Integer dontRecurseFlag;
 
@@ -18,6 +19,7 @@ public abstract class GopherResponse {
         this.de = de;
         this.ip = ip;
         dontRecurseFlag = 0;
+        errorMessage = "";
     }
 
     /**
@@ -30,7 +32,7 @@ public abstract class GopherResponse {
      * Method which adds relevant information of the response to the GopherStats class. Each
      * implementation of GopherResponse also adds to this method with more code.
      * */
-    public void addToStats() {
+    public void addToStats() throws IOException {
         GopherStats.visitedPages.add(de.selector);
         GopherStats.pagesVisited += 1;
         if (!GopherStats.externalServers.containsKey(ip)) {

@@ -36,6 +36,7 @@ public class GopherDirectory extends GopherResponse {
 
         // for keeping track of the current header
         Header header = Header.getInstance();
+        header.setHeader(Header.HeaderType.TYPE);
 
         while (true) {
             ch = sock.getInputStream().read();
@@ -45,12 +46,13 @@ public class GopherDirectory extends GopherResponse {
             // indicates last character of a directory entry
             else if (ch == '\n') {
                 if (skipPrint == 0 ) {
-                    if (header.currentHeader != Header.HeaderType.PORT) {throw new MalformedDirectory();}
+                    if (header.getHeader() != Header.HeaderType.PORT) {throw new MalformedDirectory();}
                     de.port = Integer.valueOf(portAcc);
                     paths.add(de);
                 }
                 de = new DirectoryEntry();
                 portAcc = "";
+                header = Header.getInstance();
                 header.setHeader(Header.HeaderType.TYPE);
                 skipPrint = 0;
                 continue;
@@ -66,7 +68,7 @@ public class GopherDirectory extends GopherResponse {
             if (skipPrint == 1) continue;
 
             // ========Checks for field========
-            if (header.currentHeader == Header.HeaderType.TYPE) {
+            if (header.getHeader() == Header.HeaderType.TYPE) {
                 // of type "information" so skip
                 if (ch == 105) {skipPrint = 1;}
 
@@ -80,9 +82,9 @@ public class GopherDirectory extends GopherResponse {
                 de.type = ch;
                 header.nextHeader();
             }
-            else if (header.currentHeader == Header.HeaderType.SELECTOR) {de.selector += (char) ch;}
-            else if (header.currentHeader == Header.HeaderType.HOST) {de.host += (char) ch;}
-            else if (header.currentHeader == Header.HeaderType.PORT) {
+            else if (header.getHeader() == Header.HeaderType.SELECTOR) {de.selector += (char) ch;}
+            else if (header.getHeader() == Header.HeaderType.HOST) {de.host += (char) ch;}
+            else if (header.getHeader() == Header.HeaderType.PORT) {
                 if (ch == 13) {continue;}
                 portAcc += (char) ch;
             }
@@ -91,7 +93,7 @@ public class GopherDirectory extends GopherResponse {
     }
 
     @Override
-    public void addToStats() {
+    public void addToStats() throws IOException {
         super.addToStats();
         GopherStats.dirMap.add(this);
     }

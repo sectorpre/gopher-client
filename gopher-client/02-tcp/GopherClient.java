@@ -13,6 +13,8 @@
 
 import java.io.*;
 import java.net.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 
 public class GopherClient {
@@ -24,6 +26,8 @@ public class GopherClient {
     // debug = 1 shows the current page the program has ran to as well
     // as the number of files it has processed
     static int      debug = 0;
+
+    static String errorMessage;
 
     // the number of ms before a socket timeout error is thrown
     static int socketTimeout = 1000;
@@ -57,16 +61,28 @@ public class GopherClient {
      * within a DirectoryEntry and adds statistics to the GopherStats class.
      * */
     protected static void gopherRecursive(HashSet<DirectoryEntry> des) {
+        // Get the current date and time
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
         for (DirectoryEntry k : des) {
             GopherResponse gr;
             // send a request based on information given in the DirectoryEntry k
             gr = gopherSafeRequest(k);
 
+            // gets the current time
+            LocalDateTime now = LocalDateTime.now();
+            String formattedDateTime = now.format(formatter);
+
             // if no response for whatever reason, continue to next directoryEntry
-            if (gr == null) {continue;}
+            if (gr == null) {
+                if (!errorMessage.isEmpty()) {
+                    System.out.printf("%s - %s\n",formattedDateTime, errorMessage);
+                    errorMessage = "";
+                }
+                continue;}
 
             if (debug == 1) {
-                System.out.printf("%s:%d -> %s --\t", k.host, k.port, k.selector);
+                System.out.printf("%s - %s:%d -> %s --\t", formattedDateTime, k.host, k.port, k.selector);
                 GopherStats.printStats();
             }
 
@@ -81,39 +97,40 @@ public class GopherClient {
 
     /**
      * Safe way of connecting to a gopher server by handling all errors
-     * and exceptions and adding them to Gopher statistics
+     * and exceptions and adding them to Gopher statistics. Also ensures
+     * the correct errorMessage is being sent to the main inputLoop.
      * */
     protected static GopherResponse gopherSafeRequest(DirectoryEntry k) {
         GopherResponse gr;
         try {gr = gopherConnect(k);}
         catch (java.net.UnknownHostException d) {
-            System.out.printf("%s:%d -> %s -- unknown server\n", k.host, k.port, k.selector);
             GopherStats.errorMap[0] += 1;
+            errorMessage = String.format("%s:%d -> %s -- unknown server", k.host, k.port, k.selector);
             return null;
         }
         catch (java.net.SocketTimeoutException d) {
-            System.out.printf("%s:%d -> %s -- server unresponsive\n", k.host, k.port, k.selector);
+            errorMessage = String.format("%s:%d -> %s -- server unresponsive", k.host, k.port, k.selector);
             GopherStats.errorMap[1] += 1;
             return null;
         }
         catch(java.net.ConnectException d ) {
-            System.out.printf("%s:%d -> %s -- connection error \n", k.host, k.port, k.selector);
+            errorMessage = String.format("%s:%d -> %s -- connection error", k.host, k.port, k.selector);
             GopherStats.unresponsive.add(k);
             GopherStats.errorMap[2] += 1;
             return null;
         }
         catch (GopherResponse.DataExceedException d) {
-            System.out.printf("%s:%d -> %s -- data exceeded limit\n", k.host, k.port, k.selector);
+            errorMessage = String.format("%s:%d -> %s -- data exceeded limit", k.host, k.port, k.selector);
             GopherStats.errorMap[3] += 1;
             return null;
         }
         catch (GopherResponse.MalformedDirectory d) {
-            System.out.printf("%s:%d -> %s -- malformed directory exception\n", k.host, k.port, k.selector);
+            errorMessage = String.format("%s:%d -> %s -- malformed directory exception", k.host, k.port, k.selector);
             GopherStats.errorMap[4] += 1;
             return null;
         }
         catch (IOException e) {
-            System.out.printf("%s:%d -> %s -- IOException\n", k.host, k.port, k.selector);
+            errorMessage = String.format("%s:%d -> %s -- %s", k.host, k.port, k.selector, e.getMessage());
             GopherStats.errorMap[5] += 1;
             return null;
         }
@@ -135,7 +152,8 @@ public class GopherClient {
 
         // if page is visited before, returns null
         if (externalCheck(ip, de.port) == 0) {
-            if (GopherStats.visitedPages.contains(de.selector)) {return null;}
+            if (GopherStats.visitedPages.contains(de.selector)) {
+                return null;}
         }
 
         // new socket creation

@@ -44,7 +44,7 @@ public class GopherFile extends GopherResponse {
      * Adds this file to the statistics based on its type.
      */
     @Override
-    public void addToStats() {
+    public void addToStats() throws IOException {
         super.addToStats();
         if (de.type== 57) {
             GopherStats.binaryMap.add(this);
@@ -58,22 +58,19 @@ public class GopherFile extends GopherResponse {
     /**
      * Saves the file to the current directory.
      * */
-    public void saveToFile() {
+    public void saveToFile() throws IOException {
         String fileName = Paths.get(de.selector).getFileName().toString(); // Name of the file to be created
 
-        try {
-            // Get the current directory
-            String currentDirectory = System.getProperty("user.dir");
 
-            // Resolve the file path in the current directory
-            Path filePath = Paths.get(currentDirectory, fileName);
+        // Get the current directory
+        String currentDirectory = System.getProperty("user.dir");
 
-            // Write content to the file
-            Files.write(filePath, fileData.getBytes());
+        // Resolve the file path in the current directory
+        Path filePath = Paths.get(currentDirectory, fileName);
 
-        } catch (Exception e) {
-            System.out.println("File could not be downloaded: " + e.getMessage());
-        }
+        // Write content to the file
+        Files.write(filePath, fileData.getBytes());
+            
 
     }
 }
