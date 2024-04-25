@@ -9,7 +9,6 @@ import java.nio.file.Paths;
  */
 public class GopherFile extends GopherResponse {
     int MaximumFileSize = 100000;
-    byte[] buffer = new byte[MaximumFileSize];
     int size = -1;
     String fileData = "";
 
@@ -53,20 +52,29 @@ public class GopherFile extends GopherResponse {
         else if (de.type == 48) {
             GopherStats.textMap.add(this);
         }
+        saveToFile();
+    }
+
+    /**
+     * Saves the file to the current directory.
+     * */
+    public void saveToFile() {
         String fileName = Paths.get(de.selector).getFileName().toString(); // Name of the file to be created
 
         try {
             // Get the current directory
             String currentDirectory = System.getProperty("user.dir");
+
             // Resolve the file path in the current directory
             Path filePath = Paths.get(currentDirectory, fileName);
+
             // Write content to the file
             Files.write(filePath, fileData.getBytes());
 
-            System.out.println("File '" + fileName + "' has been created in the current directory.");
         } catch (Exception e) {
-            System.out.println("An error occurred: " + e.getMessage());
+            System.out.println("File could not be downloaded: " + e.getMessage());
         }
+
     }
 }
 

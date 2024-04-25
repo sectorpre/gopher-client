@@ -40,6 +40,12 @@ public class GopherStats {
     public static Integer pagesVisited = 0;
     public static int[] errorMap = {0,0,0,0,0,0,0};
 
+    static String   serviceHost = "127.0.0.1";
+    static int      servicePort = 70;
+
+    /**
+     * Prints all available statistics
+     * */
     public static void printAll() {
         printStats();
         printServers();
@@ -49,6 +55,9 @@ public class GopherStats {
         printErrors();
     }
 
+    /**
+     * Prints all errors that occurred
+     * */
     public static void printErrors() {
         System.out.println("========== Error count ==========");
         System.out.printf("unknown server(unknown host exception): %d\n", errorMap[0]);
@@ -61,15 +70,25 @@ public class GopherStats {
 
     }
 
-
+    /**
+     * Prints all servers that the client connected to
+     * */
     public static void printServers() {
         System.out.println("==========External servers==========");
         for (var k : externalServers.entrySet()) {
-            for (var p: k.getValue())
+            for (var p: k.getValue()) {
+                if (k.getKey().equals(serviceHost) && p == servicePort) {
+                    System.out.printf("Server: %s:%d (original server) \n" , k.getKey(), p);
+                    continue;
+                }
                 System.out.printf("Server: %s:%d \n" , k.getKey(), p);
+            }
         }
     }
 
+    /**
+     * Prints all servers that the client failed to connect to
+     * */
     public static void printDownServers() {
         System.out.println("==========Servers that are down==========");
         for (var k: unresponsive) {
@@ -77,6 +96,9 @@ public class GopherStats {
         }
     }
 
+    /**
+     * Prints information on all text files
+     * */
     public static void printText() {
         System.out.println("==========Text files==========");
         GopherFile largest = new GopherFile(null, "");
@@ -93,13 +115,16 @@ public class GopherStats {
         System.out.println("==============================");
         System.out.printf("smallest text file: %s %s %d\n", smallest.de.host, smallest.de.selector, smallest.size);
         System.out.printf("largest text file: %s %s %d\n", largest.de.host, largest.de.selector, largest.size);
-        System.out.println("==============================");
+        System.out.println("======= smallest file data =========");
         System.out.printf("%s\n", smallest.fileData);
-        System.out.println("==============================");
+        System.out.println("===================================");
 
 
     }
 
+    /**
+     * Prints information on all binary files
+     * */
     public static void printBinary() {
         GopherFile largest = new GopherFile(null, "");
         GopherFile smallest = new GopherFile(null, "");
@@ -119,6 +144,9 @@ public class GopherStats {
         System.out.printf("largest binary file: %s %s %d\n", largest.de.host, largest.de.selector, largest.size);
     }
 
+    /**
+     * Prints the overall statistics
+     * */
     public static void printStats() {
         System.out.printf("pages visited: %d, directories: %d ,text files: %d, binary files %d\n",
                 pagesVisited,

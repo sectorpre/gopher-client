@@ -170,8 +170,10 @@ public class GopherClient {
         //  For any program with more than two args, use a loop or package.
         if (args.length > 0) {
             serviceHost = InetAddress.getByName(args[0]).getHostAddress();
+            GopherStats.serviceHost = serviceHost;
             if (args.length > 1) {
                 servicePort = Integer.parseInt(args[1]);
+                GopherStats.servicePort = servicePort;
             }
             if (args.length > 2) {
                 debug = Integer.parseInt(args[2]);
