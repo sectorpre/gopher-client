@@ -18,14 +18,22 @@ public class GopherFile extends GopherResponse {
         dontRecurseFlag = 1;
     }
 
+    /**
+     * Exception for when the data being read exceeds the MaximumFileSize
+     * */
     public static class DataExceedException extends GopherResponseError {
-        public DataExceedException() {
+        public DataExceedException(String message) {
+            super(message);
         }
     }
 
+    /**
+     * Exception for when a text file is not terminated with the lastline string.
+     * TextFile  ::= {TextBlock} Lastline
+     * */
     public static class FileFormatError extends GopherResponseError {
-        public FileFormatError() {
-
+        public FileFormatError(String message) {
+            super(message);
         }
 
     }
@@ -33,7 +41,6 @@ public class GopherFile extends GopherResponse {
     /**
      * Reads the file data from the given socket. If the data being read
      * exceeds MaximumFileSize, a DataExceedException is thrown.
-     *
      */
     @Override
     public void read(Socket sock) throws IOException, DataExceedException, FileFormatError {
@@ -44,8 +51,7 @@ public class GopherFile extends GopherResponse {
             // if the amount of data being read exceeds the maximum file size
             // throws an error
             if (size > MaximumFileSize) {
-                throw new DataExceedException();
-            }
+                throw new DataExceedException("data exceeded limit");}
 
             ch = sock.getInputStream().read();
             if (ch < 0) {break;}
@@ -54,10 +60,14 @@ public class GopherFile extends GopherResponse {
         }
         // ensures that a text block is terminated with a lastline string
         // of characters as specified in rfc1436:
-        // TextFile  ::= {TextBlock} Lastline
-        String lastThreeCharacters = fileData.substring(Math.max(fileData.length() - 3, 0));
-        if (!lastThreeCharacters.equals(".\r\n") && de.type == 48) {
-            throw new FileFormatError();
+        if (de.type == 48) {
+            String lastThreeCharacters = fileData.substring(Math.max(fileData.length() - 3, 0));
+            if (!lastThreeCharacters.equals(".\r\n")) {
+                throw new FileFormatError("text file format error");
+            }
+            fileData = fileData.substring(0, fileData.length() - 3);
+
+
         }
 
     }

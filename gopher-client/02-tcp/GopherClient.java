@@ -27,10 +27,9 @@ public class GopherClient {
     // as the number of files it has processed
     static int      debug = 0;
 
-    static String errorMessage;
 
     // the number of ms before a socket timeout error is thrown
-    static int socketTimeout = 1000;
+    static int socketTimeout = 3000;
 
     /** Function to checkif a given ip: port combination is an external server*/
     protected static int externalCheck(String ip, Integer port) {
@@ -66,20 +65,15 @@ public class GopherClient {
 
         for (DirectoryEntry k : des) {
             GopherResponse gr;
-            // send a request based on information given in the DirectoryEntry k
+            // send a request based on information given in the DirectoryEntry
             gr = gopherSafeRequest(k);
+
+            // if no response for whatever reason, continue to next directoryEntry
+            if (gr == null) {continue;}
 
             // gets the current time
             LocalDateTime now = LocalDateTime.now();
             String formattedDateTime = now.format(formatter);
-
-            // if no response for whatever reason, continue to next directoryEntry
-            if (gr == null) {
-                if (!errorMessage.isEmpty()) {
-                    System.out.printf("%s - %s\n",formattedDateTime, errorMessage);
-                    errorMessage = "";
-                }
-                continue;}
 
             if (debug == 1) {
                 System.out.printf("%s - %s:%d -> %s --\t", formattedDateTime, k.host, k.port, k.selector);
@@ -97,51 +91,17 @@ public class GopherClient {
 
     /**
      * Safe way of connecting to a gopher server by handling all errors
-     * and exceptions and adding them to Gopher statistics. Also ensures
-     * the correct errorMessage is being sent to the main inputLoop.
+     * and exceptions and adding them to Gopher statistics.
      * */
     protected static GopherResponse gopherSafeRequest(DirectoryEntry k) {
         GopherResponse gr;
         try {gr = gopherConnect(k);}
-        catch (java.net.UnknownHostException d) {
-            GopherStats.errorMap[0] += 1;
-            errorMessage = String.format("%s:%d -> %s -- unknown server", k.host, k.port, k.selector);
+        catch (Throwable e) {
+            if (e.getMessage().equals("Connection refused")) {
+                GopherStats.unresponsive.add(k);
+            }
+            GopherStats.allErrors.add(String.format(("%s:%d -> %s : %s"),k.host,k.port,k.selector,e.getMessage()));
             return null;
-        }
-        catch (java.net.SocketTimeoutException d) {
-            errorMessage = String.format("%s:%d -> %s -- server unresponsive", k.host, k.port, k.selector);
-            GopherStats.errorMap[1] += 1;
-            return null;
-        }
-        catch(java.net.ConnectException d ) {
-            errorMessage = String.format("%s:%d -> %s -- connection error", k.host, k.port, k.selector);
-            GopherStats.unresponsive.add(k);
-            GopherStats.errorMap[2] += 1;
-            return null;
-        }
-        catch (GopherFile.DataExceedException d) {
-            errorMessage = String.format("%s:%d -> %s -- data exceeded limit", k.host, k.port, k.selector);
-            GopherStats.errorMap[3] += 1;
-            return null;
-        }
-        catch (GopherDirectory.MalformedDirectory d) {
-            errorMessage = String.format("%s:%d -> %s -- malformed directory exception", k.host, k.port, k.selector);
-            GopherStats.errorMap[4] += 1;
-            return null;
-        }
-        catch (GopherFile.FileFormatError d) {
-            errorMessage = String.format("%s:%d -> %s -- text file format error", k.host, k.port, k.selector);
-            GopherStats.errorMap[7] += 1;
-            return null;
-        }
-        catch (IOException e) {
-            errorMessage = String.format("%s:%d -> %s -- %s", k.host, k.port, k.selector, e.getMessage());
-            GopherStats.errorMap[5] += 1;
-            return null;
-        }
-        catch (GopherResponse.GopherResponseError e) {
-            // parent class GopherResponseError should not be thrown
-            throw new RuntimeException(e);
         }
         return gr;
     }
@@ -153,7 +113,7 @@ public class GopherClient {
      *
      * */
     protected static GopherResponse gopherConnect(DirectoryEntry de)
-            throws IOException, GopherResponse.GopherResponseError {
+            throws GopherResponse.GopherResponseError, IOException {
         Socket              sock;
         GopherResponse gr;
 

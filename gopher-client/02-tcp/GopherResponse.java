@@ -7,7 +7,6 @@ import java.util.HashSet;
  * instance. I chose to represent each response as am abstract class, as both directory and file
  * type responses share common fields. Each type of response also require similar methods and lines
  * of code can be shared between the two.
- *
  * */
 public abstract class GopherResponse {
     public DirectoryEntry de;
@@ -40,7 +39,13 @@ public abstract class GopherResponse {
         GopherStats.externalServers.get(ip).add(de.port);
     }
 
-    public abstract static class GopherResponseError extends Exception {
+    /**
+     * Parent class for all GopherResponse errors that can be thrown
+     * */
+    public static class GopherResponseError extends Exception {
+        public GopherResponseError(String message) {
+            super(message);
+        }
     }
 
 }

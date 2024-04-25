@@ -13,10 +13,15 @@ public class GopherDirectory extends GopherResponse {
         super(de, ip);
     }
 
+    /**
+     * Exception for when a directory entry is not formatted correctly
+     * */
     public static class MalformedDirectory extends GopherResponseError {
-        public MalformedDirectory() {
+        public MalformedDirectory(String message) {
+            super(message);
         }
     }
+
 
     /**
      * Reads a directory entry list from a given socket and adds it to
@@ -45,13 +50,18 @@ public class GopherDirectory extends GopherResponse {
 
         while (true) {
             ch = sock.getInputStream().read();
-            // ========Checks for the current character========
-            // checks for special character
+            // CHARACTER CHECKS
             if (ch < 0) {break;}
             // indicates last character of a directory entry
             else if (ch == '\n') {
                 if (skipPrint == 0 ) {
-                    if (header.getHeader() != Header.HeaderType.PORT) {throw new MalformedDirectory();}
+
+                    // if final header being processed is not PORT, this means
+                    // that the Directory list does not follow the appropriate
+                    // format.
+                    if (header.getHeader() != Header.HeaderType.PORT) {
+                        throw new MalformedDirectory("Malformed Directory Error");}
+
                     de.port = Integer.valueOf(portAcc);
                     paths.add(de);
                 }
@@ -72,7 +82,7 @@ public class GopherDirectory extends GopherResponse {
             // accumulating data
             if (skipPrint == 1) continue;
 
-            // ========Checks for field========
+            // HEADER CHECKS
             if (header.getHeader() == Header.HeaderType.TYPE) {
                 // of type "information" so skip
                 if (ch == 105) {skipPrint = 1;}
@@ -80,8 +90,12 @@ public class GopherDirectory extends GopherResponse {
                 // last entry of directory listing
                 else if (ch == 46) {break;}
 
+                // if reads type error, adds an entry to allErrors but
+                // does not throw an error and keeps reading
                 else if (ch == 51) {
-                    GopherStats.errorMap[6] += 1;
+                    GopherStats.allErrors.add(
+                            String.format(("%s:%d -> %s : %s"),this.de.host,this.de.port,this.de.selector,
+                                    "error type in directory entry"));
                 }
 
                 de.type = ch;
