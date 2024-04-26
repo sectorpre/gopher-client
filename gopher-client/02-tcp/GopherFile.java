@@ -65,7 +65,10 @@ public class GopherFile extends GopherResponse {
             if (!lastThreeCharacters.equals(".\r\n")) {
                 throw new FileFormatError("text file format error");
             }
+
+            // removes last three characters from string
             fileData = fileData.substring(0, fileData.length() - 3);
+            size -= 3;
 
 
         }
