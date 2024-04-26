@@ -153,8 +153,6 @@ public class GopherClient {
 
     /** Handle command line arguments. */
     protected static void processArgs(String[] args) throws UnknownHostException {
-        //  This program has only two CLI arguments, and we know the order.
-        //  For any program with more than two args, use a loop or package.
         if (args.length > 0) {
             serviceHost = InetAddress.getByName(args[0]).getHostAddress();
             GopherStats.serviceHost = serviceHost;
